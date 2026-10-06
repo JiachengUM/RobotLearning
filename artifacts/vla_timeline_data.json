@@ -1,0 +1,352 @@
+{
+  "eras": [
+    {
+      "id": "e1",
+      "name": "问题奠基（2022）",
+      "start": "2022-04",
+      "end": "2022-12"
+    },
+    {
+      "id": "e2",
+      "name": "VLM先验进入闭环（2023）",
+      "start": "2023-03",
+      "end": "2023-07"
+    },
+    {
+      "id": "e3",
+      "name": "跨机构数据与开源（2023-2024）",
+      "start": "2023-10",
+      "end": "2024-05"
+    },
+    {
+      "id": "e4",
+      "name": "开源VLA（2024）",
+      "start": "2024-06",
+      "end": "2024-10"
+    },
+    {
+      "id": "e5",
+      "name": "π系列与生成式动作（2024-2025）",
+      "start": "2024-10",
+      "end": "2025-04"
+    },
+    {
+      "id": "e6",
+      "name": "终点：π0.7（2026）",
+      "start": "2026-04",
+      "end": "2026-04"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "saycan",
+      "name": "SayCan",
+      "org": "Google / Everyday Robots",
+      "date": "2022-04",
+      "era": "e1",
+      "side": false,
+      "actionRepr": "不直接输出底层动作，从预训练技能集合（低层policy+value function+自然语言描述）中选一项",
+      "headline": "LLM语义先验×技能affordance乘积打分的分层接地范式，VLA思想原点",
+      "problemSolved": "LLM有语义知识但无具身经验，直接输出动作会不可执行；用p_LLM×p_affordance把语言先验约束在机器人可执行技能内。101条指令上执行成功率74%（mock厨房），去掉affordance仅靠LLM为0%。",
+      "keyTech": "540B PaLM主干；551个候选技能（实际部署子集数量【未查证】）；68,000条遥操示范/10台机器人/11个月；误差归因65%来自LLM、35%来自affordance。",
+      "leftover": "分层非端到端、两层误差累积；技能集合封闭学不会表外新动作；affordance对长程TAMP任务信息不足（oracle基线TAMP得分0.0）。",
+      "citations": [
+        "https://arxiv.org/abs/2204.01691",
+        "https://arxiv.org/html/2204.01691v2",
+        "https://say-can.github.io/"
+      ]
+    },
+    {
+      "id": "rt1",
+      "name": "RT-1",
+      "org": "Robotics at Google / Everyday Robots",
+      "date": "2022-12",
+      "era": "e1",
+      "side": false,
+      "actionRepr": "首个动作离散token：7维臂部+3维底盘+1维模式切换，每维均匀分256 bins，类别交叉熵自回归",
+      "headline": "35M端到端机器人Transformer，证明策略可像NLP一样随数据scaling",
+      "problemSolved": "回答能否用单一端到端模型在大规模真机演示上训练、吞多任务数据并实时闭环控制。训练指令上97%成功率。",
+      "keyTech": "FiLM-EfficientNet-B3+TokenLearner（81视觉token压成8个）+8层decoder-only Transformer，35M参数、3Hz闭环、推理<100ms；约13万真机演示/13台机器人/17个月/744条指令；无web图文预训练。",
+      "leftover": "无web语义先验，对新奇物体/数字符号/抽象指令泛化差（未见场景约59-83%）；256-bin离散化精度损失、逐维自回归、难表达多模态动作；依赖大规模自采数据。",
+      "citations": [
+        "https://arxiv.org/abs/2212.06817",
+        "https://ar5iv.labs.arxiv.org/html/2212.06817",
+        "https://robotics-transformer1.github.io/"
+      ]
+    },
+    {
+      "id": "palm-e",
+      "name": "PaLM-E",
+      "org": "Google / Google DeepMind",
+      "date": "2023-03",
+      "era": "e2",
+      "side": false,
+      "actionRepr": "输出自然语言高层子目标/子步骤（1Hz），低层复用RT-1式策略执行",
+      "headline": "把图像/状态投影进大LLM词空间的embodied LLM（562B），证明互联网图文+机器人混训正迁移",
+      "problemSolved": "让LLM自己直接吃进连续传感器模态（图像、状态向量）在同一模型里做具身推理，而非外挂affordance模块；TAMP上仅用1%数据（每任务320样本）即显著优于单机器人训练。",
+      "keyTech": "ViT/OSRT投影进PaLM词嵌入空间端到端训练；最大562B=540B PaLM+22B ViT；覆盖TAMP（96,000场景）/Language-Table/厨房移动操作三域；OK-VQA无微调SOTA；移动操作直接沿用SayCan的2912条运行序列。",
+      "leftover": "仍只输出高层语言子目标、不是端到端图像到动作VLA；562B部署昂贵；未解决自采数据贵与动作离散化精度问题。",
+      "citations": [
+        "https://arxiv.org/abs/2303.03378",
+        "https://ar5iv.labs.arxiv.org/html/2303.03378",
+        "https://palm-e.github.io/"
+      ]
+    },
+    {
+      "id": "rt2",
+      "name": "RT-2",
+      "org": "Google DeepMind",
+      "date": "2023-07",
+      "era": "e2",
+      "side": false,
+      "actionRepr": "沿用RT-1的256 bins，动作拼成字符串token塞进VLM词表（symbol tuning），推理时detokenize回关节命令",
+      "headline": "正式命名Vision-Language-Action（VLA）：动作当文本token复用web预训练VLM，泛化提升2-3倍",
+      "problemSolved": "用web规模语义知识解决RT-1泛化痛点：6000次真机评估，泛化/推理新指令比RT-1好约2-3倍；消融from-scratch 9%→纯机器人微调52%→co-fine-tune 63%。",
+      "keyTech": "直接复用PaLI-X（5B/55B）或PaLM-E-12B主干不新增参数；机器人数据与web VQA同批co-fine-tune（占mixture 50%/66%），WebLI约1B样本；CoT增强（Plan→Action）。",
+      "leftover": "继承256-bin离散token的精度/延迟/多模态局限；12B-55B云模型实时性受限；机器人数据仍来自RT-1同一自采车队、缺跨本体多样性。",
+      "citations": [
+        "https://arxiv.org/abs/2307.15818",
+        "https://ar5iv.labs.arxiv.org/html/2307.15818",
+        "https://deepmind.google/discover/blog/rt-2-new-model-translates-vision-and-language-into-action/",
+        "https://robotics-transformer.github.io/"
+      ]
+    },
+    {
+      "id": "oxe_rtx",
+      "name": "Open X-Embodiment / RT-X",
+      "org": "跨机构联盟（Google DeepMind+33/34个实验室）",
+      "date": "2023-10",
+      "era": "e3",
+      "side": false,
+      "actionRepr": "继承离散分桶（RT-1-X/RT-2-X）；OXE统一为夹爪坐标系7-DoF归一化动作（x,y,z,roll,pitch,yaw,gripper或速率）",
+      "headline": "22种机器人、1M+轨迹的跨机构共享数据底座与开源checkpoint（RT-1-X/RT-2-X）",
+      "problemSolved": "单机构数据不足、跨embodiment无法迁移、开源可复现性缺失。RT-1-X小数据域比各实验室自训方法平均高约50%；RT-2-X在emergent skills上成功率约为RT-2的3倍。",
+      "keyTech": "60个已有数据集归一化为RLDS格式、1M+真实轨迹、527技能、160,266任务（机构数口径：摘要21 institutions vs 博客33 academic labs vs 论文v3的34 robotic research labs，并列保留）；RT-2-X约55B。",
+      "leftover": "正迁移主要集中在同构桌面操作与小数据域，四足/移动操作等大形态差距泛化未证明；离散动作token分辨率瓶颈；60个异构数据集标注稀疏、mixture配比仍是未解scaling问题。",
+      "citations": [
+        "https://arxiv.org/abs/2310.08864",
+        "https://arxiv.org/pdf/2310.08864v3",
+        "https://robotics-transformer-x.github.io/",
+        "https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"
+      ]
+    },
+    {
+      "id": "octo",
+      "name": "Octo",
+      "org": "UC Berkeley / Stanford / CMU / Google DeepMind",
+      "date": "2024-05",
+      "era": "e3",
+      "side": false,
+      "actionRepr": "条件扩散解码头（3层MLP、20步去噪）预测连续多模态动作分布；末端delta相对动作+action chunking",
+      "headline": "全开源（代码+权重+数据）通用策略基线，消费级GPU数小时可微调",
+      "problemSolved": "此前通用策略要么闭源（RT-2-X 55B）要么难适配新传感器/动作空间。零样本WidowX/UR5/RT-1 Robot成功率0.50/0.70/0.80，与55B RT-2-X相当。",
+      "keyTech": "冻结t5-base+浅层CNN patch编码器（16x16 patch）+block-wise掩码注意力；10M/27M/93M三档；从OXE选25个数据集约80万轨迹；TPU v4-128训14小时、单张A5000微调约5小时。",
+      "leftover": "腕相机信息处理不佳；仅93M、语言编码器冻结、无互联网VLM预训练、开放词汇语义弱于大VLA；预训练仅OXE子集、评测集中桌面操作。",
+      "citations": [
+        "https://arxiv.org/abs/2405.12213",
+        "https://octo-models.github.io/",
+        "https://arxiv.org/html/2405.12213v2"
+      ]
+    },
+    {
+      "id": "openvla",
+      "name": "OpenVLA",
+      "org": "Stanford / UC Berkeley 等",
+      "date": "2024-06",
+      "era": "e4",
+      "side": false,
+      "actionRepr": "沿用离散token：动作逐维quantile分箱映射到LLaMA最不常用的256个token，next-token自回归",
+      "headline": "开源7B VLA（Llama 2+DINOv2/SigLIP），OXE 970k轨迹训练，以1/7参数反超55B RT-2-X",
+      "problemSolved": "此前VLA闭源不可微调、学术团队拿不到55B权重。29个任务上以7B绝对成功率反超RT-2-X 16.5%、比从零训练Diffusion Policy高20.4%。",
+      "keyTech": "Prismatic-7B主干（Llama 2+融合DINOv2与SigLIP的视觉编码器）；970k真实轨迹纯开源数据；LoRA消费级GPU微调、量化部署不掉点；真机评测为RT-Bench体系（Google Robot 12任务/Bridge 17任务五维泛化）。",
+      "leftover": "原封不动继承离散token的高频精度/延迟/多模态局限（后由OpenVLA-OFT改回归头、π0改flow matching）；评测仍偏训练相近场景、开放世界泛化弱。",
+      "citations": [
+        "https://arxiv.org/abs/2406.09246",
+        "https://openvla.github.io/",
+        "https://arxiv.org/html/2510.01642v1",
+        "https://arxiv.org/html/2406.09246"
+      ]
+    },
+    {
+      "id": "robomamba",
+      "name": "RoboMamba",
+      "org": "北京大学等",
+      "date": "2024-06",
+      "era": "e4",
+      "side": true,
+      "actionRepr": "连续SE(3)末端位姿回归（6-DoF+夹爪1维），冻结主干上接小型MLP head直接回归，非离散token、非diffusion/flow",
+      "headline": "用Mamba状态空间模型替代Transformer的高效VLA",
+      "problemSolved": "3.2B参数仅微调0.1%（3.7M policy head）、数十分钟获得操作能力；自称推理速度比同期VLA快约3倍。",
+      "keyTech": "SSM backbone；逐步SE(3)回归；SAPIEN仿真与Franka单臂验证。",
+      "leftover": "未采用action chunking等生成式动作建模；主要在仿真与单臂验证，泛化证据有限。",
+      "citations": [
+        "https://ar5iv.labs.arxiv.org/html/2406.04339",
+        "https://www.semanticscholar.org/paper/RoboMamba%3A-Multimodal-State-Space-Model-for-Robot-Liu-Liu/f52c5f1ec94e8a2bf27247bcde7893572c7d53d1/figure/2"
+      ]
+    },
+    {
+      "id": "crossformer",
+      "name": "CrossFormer",
+      "org": "UC Berkeley + CMU",
+      "date": "2024-08",
+      "era": "e4",
+      "side": true,
+      "actionRepr": "连续动作；decoder-only transformer共享backbone，末端按embodiment类别接独立action heads（双臂50Hz、四足12-DoF）",
+      "headline": "单一transformer策略跨30种embodiment做操作/导航/locomotion/航空（CoRL 2024 Oral）",
+      "problemSolved": "首次证明跨具身策略可同时控制单臂、双臂、轮式导航、四足低层运动；900K轨迹、30种机器人训练，复杂导航/操作平均成功率比此前跨具身工作高约3倍。",
+      "keyTech": "arXiv:2408.11812（实际标题Scaling Cross-Embodied Learning...；调研中曾见的'Versatile VLA with Arbitrary Modality Combination'标题未查证到对应论文）。",
+      "leftover": "语言条件较弱、更接近跨具身模仿学习而非完整VLA；动作头按embodiment类别分开、未真正统一动作空间。",
+      "citations": [
+        "https://crossformer-model.github.io/"
+      ]
+    },
+    {
+      "id": "pi0",
+      "name": "π0",
+      "org": "Physical Intelligence",
+      "date": "2024-10",
+      "era": "e5",
+      "side": false,
+      "actionRepr": "conditional flow matching连续动作块H=50步（约1秒@50Hz），约10步去噪解码；VLM离散token走cross-entropy",
+      "headline": "VLA flow model：PaliGemma 3B+300M action expert（共约3.3B），开创π系列架构母版",
+      "problemSolved": "正面解决离散token在高频/双手/多模态动作上的精度瓶颈：预训练zero-shot执行叠衣服、擦桌子、装箱；单臂/双臂/移动操作统一在一个模型。",
+      "keyTech": "双专家单Transformer（Transfusion式多目标）；私有自采约9.03亿timesteps（约1万小时）/68任务/7种机器人配置【媒体/转述】，叠加OXE/Bridge v2/DROID【媒体】；2025-02-04以openpi（Apache 2.0）开源权重，同时发π0-FAST。",
+      "leftover": "评测仍在与训练相近环境、开放世界泛化不足；flow多步去噪延迟（第三方实测约300-600ms、1.5-3Hz【媒体】）；长时程任务与显式高层规划未出现。",
+      "citations": [
+        "https://arxiv.org/abs/2410.24164",
+        "https://arxiv.org/html/2410.24164v2/",
+        "https://www.pi.website/blog/openpi",
+        "https://aiwiki.ai/wiki/pi_zero"
+      ]
+    },
+    {
+      "id": "rdt1b",
+      "name": "RDT-1B",
+      "org": "清华大学",
+      "date": "2024-10",
+      "era": "e5",
+      "side": true,
+      "actionRepr": "diffusion生成连续双臂动作；DiT backbone（约1.2B参数、28层）",
+      "headline": "首个面向双臂操作的diffusion基础模型，用Diffusion Transformer作可扩展backbone",
+      "problemSolved": "把DiT引入机器人操作以处理多模态输入异构性；专注双臂；开源权重与代码。",
+      "keyTech": "arXiv:2410.07864；双臂diffusion策略。",
+      "leftover": "双臂任务特定；diffusion多步去噪推理延迟高于自回归/flow方法；真机验证规模有限。",
+      "citations": [
+        "https://arxiv.org/pdf/2410.07864.pdf",
+        "https://dl.acm.org/doi/pdf/10.1145/3732945.3733004"
+      ]
+    },
+    {
+      "id": "pi05",
+      "name": "π0.5",
+      "org": "Physical Intelligence",
+      "date": "2025-04",
+      "era": "e5",
+      "side": false,
+      "actionRepr": "双路径并存：离散自回归出高层语言子任务+flow matching出底层50步连续动作块（action expert约300M）",
+      "headline": "高低层双层VLA，异构数据co-training解决开放世界泛化（OOD成功率94%）",
+      "problemSolved": "把移动操作机器人放进训练数据完全没见过的家庭做收拾厨房/卧室、铺床等长时程任务。完整模型OOD follow/success 94%/94%；去WD降至80%/74%，去ME降至33%/31%。",
+      "keyTech": "WD（互联网多模态）+ME（异家庭）+CE（跨embodiment）三源co-training+高层子任务标注+口头指导演示；约100个训练环境后逼近'直接在测试环境训练'上界。",
+      "leftover": "新技能仍需微调、长时程任务常失败；大embodiment gap上显著退化；未系统利用失败/次优数据、无显式视觉子目标（留给π0.7）。",
+      "citations": [
+        "https://www.pi.website/blog/pi05"
+      ]
+    },
+    {
+      "id": "gr00tn1",
+      "name": "GR00T N1",
+      "org": "NVIDIA",
+      "date": "2025-03",
+      "era": "e5",
+      "side": true,
+      "actionRepr": "连续动作由diffusion transformer（DiT）动作头实时生成，与System 2 VLM模块端到端联合训练",
+      "headline": "面向人形机器人的开放VLA基础模型，双系统架构（System 2推理+System 1高频控制）",
+      "problemSolved": "号称世界首个开放的通用人形机器人基础模型（GTC 2025发布）；训练数据含第一视角人类视频、真机/仿真轨迹与合成数据。",
+      "keyTech": "双系统架构；人形本体（Fourier GR-1、1X等）。",
+      "leftover": "真机家庭任务覆盖面有限；首版仍在快速演进（很快推出N1.5/N1.6）。",
+      "citations": [
+        "https://research.nvidia.com/publication/2025-03_nvidia-isaac-gr00t-n1-open-foundation-model-humanoid-robots",
+        "https://arxiv.org/pdf/2503.14734v2"
+      ]
+    },
+    {
+      "id": "gemini_robotics",
+      "name": "Gemini Robotics",
+      "org": "Google DeepMind",
+      "date": "2025-03",
+      "era": "e5",
+      "side": true,
+      "actionRepr": "连续motor commands（具体动作头结构未公开）；1.5版动作前显式输出推理过程",
+      "headline": "基于Gemini 2.0、把动作作为新输出模态的旗舰闭源VLA，配套ER具身推理模块",
+      "problemSolved": "把Gemini 2.0互联网级多模态推理直接接入机器人控制；ER↔VLA双层栈支持跨embodiment技能迁移；On-Device端侧版媒体报道约50条演示即可微调。2025-03-12首发、2025-06-24端侧版、2025-09-25 1.5版。",
+      "keyTech": "Gemini 2.0主干+Embodied Reasoning模块。",
+      "leftover": "闭源、仅API/合作访问；训练数据与内部评测不透明、外部难以复现。",
+      "citations": [
+        "https://goo.gle/Gemini-2-robotics?trk=news_storyline_guest_reshare-text",
+        "https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/",
+        "https://arxiv.org/pdf/2510.03342"
+      ]
+    },
+    {
+      "id": "pi07",
+      "name": "π0.7",
+      "org": "Physical Intelligence",
+      "date": "2026-04",
+      "era": "e6",
+      "side": false,
+      "actionRepr": "860M flow matching action expert、固定50个action token=50步chunk、token间双向注意力；adaptive RMSNorm注入flow时间步；训练时RTC",
+      "headline": "steerable通用基座（约5B）：Gemma3 4B主干+MEM历史编码器+world model子目标引导，组合泛化早期迹象",
+      "problemSolved": "把泛化从'新环境已知任务'推进到'训练里没见过的新任务组合'：叠T恤zero-shot迁到零该数据的双臂UR5e达专家人类水平；4个未见厨房+2个未见卧室执行3-6步指令；抗Reverse数据偏置；开箱追平/超过π*0.6 RL专家。",
+      "keyTech": "总参数约5B（Gemma3 4B含400M视觉编码器+MEM历史编码器+860M flow expert）；world model初始化自BAGEL 14B衍生、每Δ=4秒生成子目标图；知识绝缘训练（梯度不回传主干）；多模态prompt conditioning（子任务语言/子目标图/速度质量出错元数据/控制模式+随机dropout）；重度使用失败次优数据与π*0.6 RL专家蒸馏；第一人称人类视频；单张H100最小38ms、开MEM+子目标最坏127ms。",
+      "leftover": "未见任务成功率仅60-80%（分布内>90%）；约5分钟长时程任务不能纯zero-shot、需语言coaching；'见过/没见过'难以严格界定；总训练数据量【未公开/未查证】；是否开放权重与标准benchmark数字表【未公开/未查证】；多机器人协作未见公开演示。",
+      "citations": [
+        "https://www.pi.website/blog/pi07",
+        "https://arxiv.org/html/2604.15483v1"
+      ]
+    }
+  ],
+  "chain": [
+    {
+      "from": "SayCan",
+      "leftover": "分层非端到端、两层误差累积（65%错误来自LLM规划层）；技能集封闭；affordance对长程TAMP信息不足（oracle基线0.0）",
+      "to": "PaLM-E",
+      "solution": "把传感器直接投影进大LLM词空间做具身推理，移动操作域直接沿用SayCan设置与2912条运行序列，把接地从外置value function升级为模型内建，解决分层误差累积与封闭技能集问题"
+    },
+    {
+      "from": "RT-1",
+      "leftover": "无web语义先验，对新奇物体/数字符号/抽象指令泛化差",
+      "to": "RT-2",
+      "solution": "直接复用web预训练VLM主干（PaLI-X/PaLM-E-12B）不新增参数，沿用其256-bin动作分桶，用机器人数据与web VQA co-fine-tune（消融from-scratch 9%→co-FT 63%）补上泛化"
+    },
+    {
+      "from": "RT-2",
+      "leftover": "55B级闭源、学术团队拿不到权重，动作token与VLM语义对齐粗糙",
+      "to": "OpenVLA",
+      "solution": "用开源7B Prismatic主干（Llama 2+DINOv2/SigLIP）+OXE 970k开源轨迹+LLaMA词表256动作token，LoRA可微调，以1/7参数反超RT-2-X 16.5%，把VLA拉进社区可复现区间"
+    },
+    {
+      "from": "RT-2",
+      "leftover": "256-bin离散token精度有限、逐维自回归慢、难表达多模态连续动作分布",
+      "to": "π0",
+      "solution": "改用conditional flow matching学向量场，一次输出H=50步连续action chunk、约10步去噪，独立300M action expert与VLM主干Transfusion式多目标共训，直接建模高频多模态灵巧动作分布"
+    },
+    {
+      "from": "Open X-Embodiment / RT-X",
+      "leftover": "跨embodiment共训练的正迁移已被证明（RT-1-X+50%、RT-2-X 3倍），但只在同构桌面操作上显著、跨本体方法学未延续到更大模型",
+      "to": "π0",
+      "solution": "继承cross-embodiment training方法学，把单臂/双臂/移动操作统一进同一3.3B模型，叠加私有多机器人自采数据（约1万小时【媒体】）与公开OXE/Bridge/DROID，把OXE的数据底座升级为生成式动作模型的训练原料"
+    },
+    {
+      "from": "π0",
+      "leftover": "评测仍在与训练相近的环境，全新家庭/杂乱场景开放世界泛化不足",
+      "to": "π0.5",
+      "solution": "新增离散自回归路径输出高层语言子任务形成高低层双层；用WD（互联网多模态）+ME（异家庭）+CE（跨embodiment）异构co-training，把OOD follow/success推到94%"
+    },
+    {
+      "from": "π0.5",
+      "leftover": "新技能仍需微调、长时程任务常失败；大embodiment gap上退化；未系统利用失败/次优数据、无显式视觉子目标",
+      "to": "π0.7",
+      "solution": "主干升级Gemma3 4B、action expert放大到860M，新增MEM历史编码器与world model生成子目标图的分层引导；重度纳入失败/次优自主数据+π*0.6 RL专家蒸馏+第一人称人类视频，用episode元数据消歧，实现组合泛化与开箱专家级灵巧"
+    }
+  ]
+}

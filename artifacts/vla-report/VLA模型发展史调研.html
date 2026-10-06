@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLA 模型发展史深度调研：从 RT-1 到 π0.7 的技术路线图</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d3f44'/%3E%3Cpath d='M8 22 L16 9 L24 22' stroke='%23e8a33d' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23f2efe6'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+:root{
+  --ink:#1c2b2d;
+  --ink-soft:#3a4a4d;
+  --teal:#0e6b72;
+  --teal-deep:#0d3f44;
+  --teal-line:#bcd4d5;
+  --amber:#c97c0a;
+  --amber-soft:#f3e3c3;
+  --slate:#5b6b70;
+  --paper:#faf8f2;
+  --paper-card:#ffffff;
+  --line:#dcdcd4;
+  --side:#8aa0a5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{
+  font-family:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.8;font-size:15.5px;
+}
+h1,h2,h3,h4{font-family:"Noto Serif SC","Songti SC",serif;color:var(--teal-deep);line-height:1.4}
+a{color:var(--teal);text-decoration:none;border-bottom:1px dotted var(--teal-line)}
+a:hover{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* ===== 顶部吸顶导航 ===== */
+.topnav{
+  position:sticky;top:0;z-index:100;background:var(--teal-deep);
+  box-shadow:0 2px 12px rgba(13,63,68,.25);
+}
+.topnav-inner{
+  max-width:1200px;margin:0 auto;padding:0 20px;
+  display:flex;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;
+  scrollbar-width:thin;
+}
+.topnav-brand{
+  color:#f2efe6;font-weight:700;font-size:14px;padding:14px 14px 14px 0;
+  font-family:"Noto Serif SC",serif;letter-spacing:.5px;border:none;flex-shrink:0;
+}
+.topnav a.navlink{
+  color:#cfe0e0;font-size:12.5px;padding:14px 9px;display:inline-block;border:none;
+  flex-shrink:0;transition:color .15s;
+}
+.topnav a.navlink:hover{color:#fff;background:rgba(255,255,255,.08)}
+
+/* ===== Hero ===== */
+.hero{
+  background:linear-gradient(160deg,#0d3f44 0%,#0e5a60 60%,#0e6b72 100%);
+  color:#eef4f3;padding:64px 24px 56px;
+}
+.hero-inner{max-width:1000px;margin:0 auto}
+.hero .kicker{font-size:13px;letter-spacing:3px;color:#e8a33d;text-transform:uppercase;margin-bottom:18px}
+.hero h1{color:#f7f3e8;font-size:38px;line-height:1.3;font-weight:900;max-width:820px}
+.hero .sub{margin-top:20px;font-size:15px;color:#c4d8d8;max-width:780px;line-height:1.9}
+.hero .meta-row{margin-top:28px;display:flex;gap:28px;flex-wrap:wrap}
+.hero .meta{font-size:12.5px;color:#9fc0c0}
+.hero .meta b{color:#e8a33d;font-size:22px;font-family:"Noto Serif SC",serif;display:block;line-height:1.2}
+
+/* ===== 主体 ===== */
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+section.chapter{padding:46px 0 10px;border-top:1px solid var(--line)}
+section.chapter:first-of-type{border-top:none}
+.chap-tag{
+  display:inline-block;font-size:12px;color:var(--amber);font-weight:700;
+  letter-spacing:2px;margin-bottom:8px;
+}
+h2.chap-title{font-size:26px;margin-bottom:18px;padding-left:14px;border-left:4px solid var(--amber)}
+h3{font-size:19px;margin:26px 0 10px;color:var(--teal-deep)}
+h4{font-size:16px;margin:18px 0 8px;color:var(--teal)}
+p{margin:10px 0}
+strong{color:var(--teal-deep)}
+blockquote{
+  border-left:3px solid var(--teal-line);background:#f0f3f1;
+  padding:12px 18px;margin:14px 0;color:var(--ink-soft);font-size:14.5px;border-radius:0 6px 6px 0;
+}
+ul,ol{margin:10px 0 10px 24px}
+li{margin:6px 0}
+.cite{
+  font-size:11px;color:var(--teal);vertical-align:super;
+  border-bottom:1px dotted var(--teal-line);word-break:break-all;
+}
+.cite:hover{color:var(--amber)}
+
+/* ===== 表格 ===== */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:8px;background:#fff}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:13px;background:#fff}
+colgroup col{}
+th{
+  background:var(--teal-deep);color:#eef4f3;font-weight:500;text-align:left;
+  padding:10px 10px;font-size:12.5px;line-height:1.5;
+}
+td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top;line-height:1.65;word-break:break-word}
+tr:nth-child(even) td{background:#f6f7f4}
+
+/* ===== 图表容器 ===== */
+.viz-card{
+  background:var(--paper-card);border:1px solid var(--line);border-radius:10px;
+  padding:20px;margin:18px 0;box-shadow:0 1px 4px rgba(28,43,45,.05);
+}
+.viz-card .viz-title{font-family:"Noto Serif SC",serif;font-size:18px;color:var(--teal-deep);margin-bottom:4px}
+.viz-card .viz-desc{font-size:13px;color:var(--slate);margin-bottom:10px}
+#timelineChart{width:100%;height:420px}
+#chainChart{width:100%;height:520px}
+.detail-panel{
+  margin-top:14px;border:1px solid var(--teal-line);border-radius:8px;
+  background:#f0f6f6;padding:18px;min-height:120px;
+}
+.detail-panel .dp-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.detail-panel .dp-name{font-family:"Noto Serif SC",serif;font-size:20px;color:var(--teal-deep);font-weight:700}
+.detail-panel .dp-org{font-size:13px;color:var(--slate)}
+.detail-panel .dp-date{font-size:12px;color:var(--amber);font-weight:700}
+.detail-panel .dp-row{margin:8px 0;font-size:14px}
+.detail-panel .dp-label{
+  display:inline-block;font-size:11.5px;font-weight:700;color:#fff;background:var(--teal);
+  padding:1px 8px;border-radius:3px;margin-right:6px;letter-spacing:1px;
+}
+.detail-panel .dp-label.alt{background:var(--amber)}
+.detail-panel .dp-empty{color:var(--slate);font-size:14px;padding:20px 0;text-align:center}
+.legend-row{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--slate);margin:6px 0 2px}
+.legend-row .lg{display:inline-flex;align-items:center;gap:6px}
+.dot-main{width:12px;height:12px;border-radius:50%;background:var(--teal);display:inline-block}
+.dot-side{width:10px;height:10px;border-radius:50%;border:2px solid var(--side);background:transparent;display:inline-block}
+
+footer{
+  margin-top:60px;background:var(--teal-deep);color:#9fc0c0;font-size:12.5px;
+  padding:26px 24px;text-align:center;
+}
+@media (max-width:760px){
+  .hero h1{font-size:26px}
+  #timelineChart{height:360px}
+  #chainChart{height:640px}
+  body{font-size:14.5px}
+  h2.chap-title{font-size:21px}
+}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="#top">VLA 技术路线图</a>
+    <a class="navlink" href="#sec-viz-tl">交互时间线</a>
+    <a class="navlink" href="#sec-viz-chain">问题解决链</a>
+    <a class="navlink" href="#sec1">摘要</a>
+    <a class="navlink" href="#sec2">七维总览</a>
+    <a class="navlink" href="#sec3">2022 奠基</a>
+    <a class="navlink" href="#sec4">2023 VLM</a>
+    <a class="navlink" href="#sec5">跨机构开源</a>
+    <a class="navlink" href="#sec6">开源 VLA</a>
+    <a class="navlink" href="#sec7">π 系列</a>
+    <a class="navlink" href="#sec8">π0.7 深挖</a>
+    <a class="navlink" href="#sec9">动作表征</a>
+    <a class="navlink" href="#sec10">评估基准</a>
+    <a class="navlink" href="#sec11">同期模型</a>
+    <a class="navlink" href="#sec12">未决问题</a>
+    <a class="navlink" href="#sec13">参考来源</a>
+    <a class="navlink" href="#sec14">事实纪律</a>
+  </div>
+</nav>
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <div class="kicker">Embodied Intelligence · Research Report</div>
+    <h1>VLA 模型发展史深度调研<br>从 RT-1 到 π0.7 的技术路线图</h1>
+    <p class="sub">
+      本报告追踪一条主线：一个从"LLM 外挂技能"走向"端到端连续动作生成"的具身智能架构收敛过程。
+      覆盖 2022–2026 年间 SayCan、RT-1、PaLM-E、RT-2、Open X-Embodiment、Octo、OpenVLA、π0、π0.5 到 π0.7 的关键模型，
+      从架构、动作表征、数据策略、泛化、灵巧操作、效率与评估七个维度逐代对比。
+    </p>
+    <div class="meta-row">
+      <div class="meta"><b>11</b>主线 + 同期模型</div>
+      <div class="meta"><b>7</b>技术对比维度</div>
+      <div class="meta"><b>6</b>演进时代</div>
+      <div class="meta"><b>2022–2026</b>时间跨度</div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+
+<section class="chapter" id="sec-viz-tl">
+  <span class="chap-tag">核心可视化 01</span>
+  <h2 class="chap-title">交互式演进时间线：六个时代、十五个节点</h2>
+  <p style="font-size:14.5px;color:var(--ink-soft)">
+    横轴为模型发布时间，色带划分六个时代。<b>实心深青点</b>为本报告主线节点（10 个），
+    <b>空心灰点</b>为同期代表模型（5 个）。<b>点击任意节点</b>，下方详情面板将展示该模型解决了什么问题、关键技术、动作表征与遗留问题。
+  </p>
+  <div class="viz-card">
+    <div class="legend-row">
+      <span class="lg"><span class="dot-main"></span>主线模型</span>
+      <span class="lg"><span class="dot-side"></span>同期代表模型</span>
+      <span class="lg" style="color:var(--slate)">点击节点查看详情</span>
+    </div>
+    <div id="timelineChart"></div>
+    <div class="detail-panel" id="tlDetail">
+      <div class="dp-empty">点击时间线上任一节点，查看该模型的详细档案。</div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="sec-viz-chain">
+  <span class="chap-tag">核心可视化 02</span>
+  <h2 class="chap-title">问题解决链条：上一代遗留问题 → 下一代解决方案</h2>
+  <p style="font-size:14.5px;color:var(--ink-soft)">
+    下图呈现 7 条"继承—解决"关系：箭头从<b>遗留问题提出者</b>指向<b>解决方案提出者</b>。
+    <b>悬停或点击连边</b>，下方面板显示该问题的完整描述与对应解决方案。
+  </p>
+  <div class="viz-card">
+    <div id="chainChart"></div>
+    <div class="detail-panel" id="chainDetail">
+      <div class="dp-empty">点击图中任意连边，查看"遗留问题 → 解决方案"的完整对照。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Markdown 内容源（逐字摘自 vla_report_master.md） ===== -->
+<script type="text/markdown" id="md-sec1">
+## 1. 摘要与总览
+
+本报告追踪的主线是：一个**从"LLM 外挂技能"走向"端到端连续动作生成"的具身智能架构收敛过程**。2022 年，SayCan 证明语言模型（LLM）的语义知识必须经过机器人可执行性（affordance）接地才能落地，但它是分层、非端到端的 ["https://arxiv.org/html/2204.01691v2"]；同年的 RT-1 用 35M 参数的端到端 Transformer 把动作离散成 token，证明机器人策略可以像 NLP 一样随数据 scaling，却因没有互联网语义先验而泛化受限 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]。2023 年，PaLM-E 把连续传感器模态直接投影进大 LLM 的词空间并证明"互联网图文 + 机器人数据混训"有正迁移 ["https://ar5iv.labs.arxiv.org/html/2303.03378"]，RT-2 则正式命名 Vision-Language-Action（VLA）这一范畴，把动作当作文本 token 塞进 web 预训练 VLM，用 web 知识补上了 RT-1 的泛化短板 ["https://arxiv.org/abs/2307.15818"]。2023 末至 2024 年，Open X-Embodiment（OXE）跨机构数据联盟把 22 种机器人、100 万+ 轨迹归一化为共享数据底座，Octo 以全开源通用策略降低使用门槛 ["https://arxiv.org/abs/2310.08864","https://arxiv.org/abs/2405.12213"]；2024 年中的 OpenVLA 把 7B 开源 VLM 主干 + OXE 数据 + 动作 token 词表扩展的范式固化，让闭源 VLA 第一次可被社区复现 ["https://arxiv.org/abs/2406.09246"]。2024 末至 2025 年，Physical Intelligence 的 π0 用 flow matching 连续动作块取代离散 token，把高频、多模态灵巧操作推上舞台 ["https://arxiv.org/abs/2410.24164"]；π0.5 进一步解决开放世界泛化 ["https://www.pi.website/blog/pi05"]。2026 年 4 月发布的 π0.7 是本报告终点：它以 Gemma3 4B 为 VLM 主干、860M flow matching 动作专家、MEM 历史编码器与 world model 子目标引导，首次展示机器人组合泛化（compositional generalization）的早期迹象，同时自报未见任务成功率仅 60–80%、长时程任务仍需语言 coaching，为整条路线留下了清晰的未决问题清单 ["https://arxiv.org/html/2604.15483v1"]。
+
+### 1.1 关键里程碑
+
+| 模型 | 时间 | 机构 | 一句话定位 |
+|---|---|---|---|
+| SayCan | 2022-04 | Google / Everyday Robots | LLM 语义先验 × 技能 affordance 打分的分层接地范式，VLA 的思想原点 ["https://arxiv.org/abs/2204.01691"] |
+| RT-1 | 2022-12 | Robotics at Google | 首个动作离散成 token 的端到端机器人 Transformer（35M），证明策略可 scaling ["https://arxiv.org/abs/2212.06817"] |
+| PaLM-E | 2023-03 | Google | 把图像/状态注入 LLM 词空间的 embodied LLM（562B），证明混训正迁移 ["https://arxiv.org/abs/2303.03378"] |
+| RT-2 | 2023-07 | Google DeepMind | 首提 "Vision-Language-Action"，动作当文本 token 复用 web VLM，泛化提升 2–3 倍 ["https://arxiv.org/abs/2307.15818"] |
+| OXE / RT-X | 2023-10 | 跨机构联盟 | 22 种机器人、1M+ 轨迹的共享数据底座与开源权重（RT-1-X / RT-2-X）["https://arxiv.org/abs/2310.08864"] |
+| Octo | 2024-05 | Berkeley–Stanford–CMU–DeepMind | 全开源通用策略基线（93M，diffusion 连续动作头，消费级 GPU 可微调）["https://arxiv.org/abs/2405.12213"] |
+| OpenVLA | 2024-06 | Stanford / UC Berkeley 等 | 开源 7B VLA（Llama 2 + DINOv2/SigLIP），OXE 970k 轨迹训练，反超 55B RT-2-X ["https://arxiv.org/abs/2406.09246"] |
+| π0 | 2024-10 | Physical Intelligence | flow matching 连续动作块（H=50）的 VLA flow model，3.3B，开创 π 系列架构母版 ["https://arxiv.org/abs/2410.24164"] |
+| π0.5 | 2025-04 | Physical Intelligence | 高低层双层 VLA，异构数据 co-training 解决开放世界泛化（OOD 成功率 94%）["https://www.pi.website/blog/pi05"] |
+| π0.7 | 2026-04 | Physical Intelligence | steerable 通用基座（约 5B），组合泛化早期迹象 + world model 子目标引导 + RL 专家蒸馏 ["https://www.pi.website/blog/pi07"] |
+</script>
+
+<script type="text/markdown" id="md-sec2">
+## 2. 技术路线图七大维度总览
+
+### 2.1 模型 × 维度对比表
+
+| 模型 | 架构设计 | 动作表征 | 数据策略 | 泛化与常识迁移 | 灵巧操作与多 embodiment | 训练与推理效率 | 评估基准 |
+|---|---|---|---|---|---|---|---|
+| SayCan | 分层：PaLM 540B 选技能 × 技能 value function 打分 | 不输出底层动作，只从预训练技能集合中选一项 ["https://arxiv.org/html/2204.01691v2"] | 68k 遥操示范/10 机/11 个月，551 候选技能 | 靠 LLM 语义先验，但技能集封闭 | 单一台移动操作机器人 | 非实时端到端；两层系统误差累积 | 101 条指令 mock/真实厨房成功率 84%/74%、81%/60% ["https://arxiv.org/html/2204.01691v2"] |
+| RT-1 | FiLM-EfficientNet-B3 + TokenLearner + 8 层 decoder-only Transformer，35M | 7+3+1 维动作，每维均匀分 256 bins，类别交叉熵自回归 ["https://ar5iv.labs.arxiv.org/html/2212.06817"] | 约 13 万真机演示、13 台机器人、17 个月、744 条指令；无 web 图文预训练 | 未见物体/新厨房泛化明显掉点 | 单一 Everyday Robots 车队 | 35M 小模型、3 Hz 闭环、推理 <100ms | 训练指令 97%；3000 次真机试验，未见场景约 59–83% ["https://ar5iv.labs.arxiv.org/html/2212.06817"] |
+| PaLM-E | 图像/OSRT 投影进 PaLM 词嵌入空间；最大 562B=540B PaLM+22B ViT | 输出自然语言高层子目标，低层复用 RT-1 策略 ["https://ar5iv.labs.arxiv.org/html/2303.03378"] | 互联网图文/语言任务与三机器人域混训；TAMP 上 1% 数据（每任务 320 样本）即正迁移 | OK-VQA 无微调 SOTA；涌现零样本多模态 CoT | TAMP / Language-Table / 厨房移动操作三域 | 562B 云模型，部署昂贵；Language-Table 上 1Hz 出子目标 | 三机器人域 + OK-VQA 等 VQA 基准 ["https://arxiv.org/abs/2303.03378"] |
+| RT-2 | 直接复用 PaLI-X（5B/55B）或 PaLM-E-12B 作主干，不新增参数 | 沿用 RT-1 的 256 bins，动作拼成字符串 token 塞进 VLM 词表（symbol tuning）["https://ar5iv.labs.arxiv.org/html/2307.15818"] | 机器人轨迹与 web VQA 数据 co-fine-tune（机器人数据占 50%/66%），WebLI 约 1B 样本 | 泛化/推理新指令比 RT-1 好 2–3 倍；from-scratch 9% → co-FT 63% | 仍为 RT-1 同一车队，跨本体未解决 | 12B–55B 云推理，实时性受限 | 6000 次真机评估；符号/推理/人物识别/多语言 ["https://arxiv.org/abs/2307.15818"] |
+| RT-1-X / RT-2-X | 架构与 RT-1 / RT-2 完全相同（35M / 约 55B） | 继承离散分桶；OXE 统一为夹爪系 7-DoF 归一化动作 ["https://robotics-transformer-x.github.io/"] | 34 个实验室 60 个数据集汇聚为 1M+ 轨迹（RLDS 格式）["https://arxiv.org/pdf/2310.08864v3"] | RT-1-X 小数据域平均提升约 50%；RT-2-X 涌现技能约为 RT-2 的 3 倍 | 22 种 embodiment 共训练 | 同 RT-1/RT-2；权重开源可推理/微调 | 6 个学术实验室 3600 次评测试验 ["https://www.robot-learning.ml/2023/files/paper18.pdf"] |
+| Octo | transformer-first：冻结 t5-base + 浅层 CNN patch 编码器 + block-wise 注意力；10M/27M/93M 三档 | 条件 diffusion 解码头（3 层 MLP、20 步去噪），末端 delta 相对动作 + action chunking ["https://arxiv.org/html/2405.12213v2"] | 从 OXE 选 25 个数据集、约 800k 轨迹；TPU v4-128 训 14 小时 | 无互联网 VLM 预训练，开放词汇语义弱于大 VLA 模型 | 多异构 embodiment/相机配置统一接入 | 单张 A5000 微调约 5 小时 | WidowX/UR5/RT-1 Robot 零样本 0.50/0.70/0.80；6 设置微调平均 0.72 ["https://octo-models.github.io/"] |
+| OpenVLA | 7B：Prismatic-7B（Llama 2 + DINOv2 与 SigLIP 融合视觉编码器） | 动作逐维 quantile 分箱映射到 LLaMA 最不常用的 256 个 token，next-token 自回归 ["https://arxiv.org/html/2510.01642v1"] | OXE 970k 真实操作轨迹；纯开源数据，无自采私有引擎 | 以 1/7 参数量在 29 任务上绝对成功率超 RT-2-X 16.5%、超 Diffusion Policy 20.4% | 开箱支持多 embodiment | LoRA 消费级 GPU 微调；量化部署不掉点 | 29 任务多机器人；Google Robot 12 任务 / Bridge 17 任务（RT-Bench 体系）["https://arxiv.org/abs/2406.09246","https://arxiv.org/html/2406.09246"] |
+| π0 | 双专家单 Transformer（Transfusion 式）：PaliGemma 3B VLM + 300M action expert，共约 3.3B | conditional flow matching 连续动作块 H=50 步（约 1 秒 @50Hz），约 10 步去噪 ["https://aiwiki.ai/wiki/pi_zero"] | 私有自采约 9.03 亿 timesteps（约 1 万小时）/68 任务/7 种机器人配置【媒体】，叠加 OXE、Bridge v2、DROID【媒体】["https://www.cloderic.com/content/2025-02-27-notes-on-pi0","https://aiwiki.ai/wiki/pi0/raw"] | 预训练 zero-shot 执行叠衣/擦桌/装箱等双手任务 | 单臂、双臂、移动操作统一在一个模型 | flow 多步去噪；第三方实测延迟约 300–600ms、频率 1.5–3Hz【媒体】["https://vnrobo.com/en/blog/lerobot-g1-pi0fast-whole-body"] | 5 个真机任务与 OpenVLA/Octo 同步数对比 ["https://arxiv.org/html/2410.24164v4"] |
+| π0.5 | 基于 π0 扩展：离散 AR 出高层语言子任务 + flow matching 出底层 50 步动作块 | 双解码路径并存；action expert 约 300M | WD（互联网多模态）+ ME（异家庭）+ CE（跨 embodiment）异构 co-training；高层子任务标注 | OOD follow/success 94%/94%；去 WD 降至 80%/74%，去 ME 降至 33%/31% | 移动操作机器人进入完全没见过的家庭 | 同 π0 量级 | 未见新家清洁任务；subtask 成功率与跟随率 ["https://www.pi.website/blog/pi05"] |
+| π0.7 | 约 5B：Gemma3 4B VLM 主干（含 400M 视觉编码器）+ MEM 历史编码器 + 860M flow matching action expert；world model（BAGEL 14B 衍生）生成子目标图 | 860M transformer、固定 50 action token、token 间双向注意力；adaptive RMSNorm 注入 flow 时间步；训练时 RTC | 多平台演示 + 自主评测数据 + 人介入 + 开源数据集（DROID）+ 第一人称人类视频 + 互联网辅助数据；重度使用失败/次优数据与 π*0.6 RL 专家蒸馏；总量【未公开】 | 4 个未见厨房 + 2 个未见卧室；复杂指称显著优于 π0.5/0.6；抗"Reverse"数据偏置 | 叠 T 恤 zero-shot 迁移到零该数据的双臂 UR5e，达专家人类水平 | 单张 H100：最小 38ms，开 MEM+子目标最坏 127ms；world model 子目标 25 步去噪约 1.25s（4×H100） | 与自家 π*0.6 RL 专家比成功率与吞吐；无外部标准化 benchmark ["https://arxiv.org/html/2604.15483v1"] |
+
+### 2.2 七大维度的演进观察
+
+**架构设计**：主线经历了"分层两系统（SayCan）→ 小而快端到端（RT-1）→ 把传感器注入大 LLM（PaLM-E）→ 复用大 VLM 主干（RT-2）→ 开源 VLM 主干（OpenVLA）→ 双专家单 Transformer（π0）→ 主干 + 历史编码器 + world model 引导（π0.7）"的迁移。贯穿始终的收敛点是：VLM 主干越来越大、越来越开源化（PaliGemma → Gemma3），而动作生成从主干中拆分为独立专家（action expert），并用"知识绝缘"梯度配方保护主干预训练知识不被机器人梯度破坏 ["https://arxiv.org/html/2604.15483v1"]。
+
+**动作表征**：这是本报告最核心的一条暗线（详见第 9 节专题）。SayCan 不直接输出动作；RT-1/RT-2/OpenVLA 把动作离散成 256-bin token 自回归；Octo 与 π0 分别用 diffusion 与 flow matching 回归连续动作块；π0.5 之后形成"离散语言高层 + flow matching 底层"的双层表征。离散路线胜在复用 VLM、实现极简，代价是精度、延迟与多模态建模受限；连续路线胜在高频灵巧，代价是多步去噪与推理开销 ["https://arxiv.org/pdf/2307.15818","https://aiwiki.ai/wiki/pi_zero"]。
+
+**数据策略**：从 RT-1 的 13 万条自采轨迹（17 个月、13 台车），到 PaLM-E/RT-2 的"互联网图文 + 机器人数据 co-fine-tune"，再到 OXE 的跨机构共享数据底座，再到 π0.5 的 WD/ME/CE 三源 co-training 与 π0.7 的失败/次优数据 + RL 专家蒸馏 + 第一人称人类视频，数据工程的重心从"采得多"转向"数据来源多、质量梯度多、提示模态多" ["https://ar5iv.labs.arxiv.org/html/2212.06817","https://arxiv.org/abs/2310.08864","https://www.pi.website/blog/pi05","https://arxiv.org/html/2604.15483v1"]。
+
+**泛化与常识迁移**：泛化来源经历了三次升级——RT-1 完全没有 web 先验（未见物体/新厨房明显掉点）；RT-2 证明 web 预训练是泛化来源（消融 from-scratch 9%、纯机器人微调 52%、co-fine-tune 63%）["https://ar5iv.labs.arxiv.org/html/2307.15818"]；π0.5 证明开放世界泛化依赖"互联网多模态数据 + 其他环境/其他机器人数据"的异构混合（去掉 ME 后 OOD 成功率从 94% 崩到 31%）["https://www.pi.website/blog/pi05"]。π0.7 进一步把泛化从"新环境里的已知任务"推进到"训练里没见过的新任务组合"，但自承未见任务成功率仅 60–80% ["https://arxiv.org/html/2604.15483v1"]。
+
+**灵巧操作与多 embodiment**：OXE 首次把 22 种机器人归一到同一套夹爪系 7-DoF 动作接口下共训练 ["https://robotics-transformer-x.github.io/"]；π0 把单臂/双臂/移动操作统一进一个 3.3B 模型并 zero-shot 叠衣服、擦桌子、装箱 ["https://arxiv.org/abs/2410.24164"]；π0.7 把"小型静态双臂采的叠 T 恤"zero-shot 迁到没有任何叠衣数据的双臂 UR5e，成功率达到首次操作该硬件的专家人类水平 ["https://www.pi.website/blog/pi07"]。但跨 embodiment 增益在同构桌面操作上最显著，形态差异极大的平台（四足、人形全身）泛化仍未被证明 ["https://arxiv.org/abs/2310.08864"]。
+
+**训练与推理效率**：效率光谱两端对照鲜明——RT-1 用 35M 小模型在 3 Hz 下实时闭环 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]，PaLM-E/RT-2 则是百亿参数云模型；Octo/OpenVLA 把开源模型做到消费级 GPU 可微调（A5000 约 5 小时）["https://arxiv.org/html/2405.12213v2"]；flow matching 路线以多步去噪换取动作质量，π0.7 用训练时 real-time action chunking（RTC）、量化、SageAttention 与异步流水线把最小推理延迟压到 38ms，但开启 MEM + 子目标图后最坏 127ms，world model 子目标生成仍需约 1.25 秒与 4×H100 ["https://arxiv.org/html/2604.15483v1"]。
+
+**评估基准演进**：从 SayCan/RT 系列的自报真机成功率，到 LIBERO 仿真四迁移维度、OXE 跨具身协议、SIMPLER 仿真-真机配对、RT-Bench 真机泛化五分类，再到 π 系列自报评测与 AutoEval 自动化趋势——评测正在沿"泛化轴拆解、仿真/真机配对、长时程开放世界、自动判定"演进，但截至 π0.7 发布时，业界仍没有一个被普遍接受的"机器人界 ImageNet/MMLU"（详见第 10 节）["https://liveinthefuture.org/stories/physical-intelligence-pi07-robot-generalization-data-gap"]。
+</script>
+
+<script type="text/markdown" id="md-sec3">
+## 3. 第一代：问题奠基（2022）
+
+VLA 这个词此时尚未出现。这一代的两个工作（SayCan 与 RT-1）分别回答了两个根本问题：**语言模型的语义知识怎样接到机器人身上？**以及**机器人策略能不能像 NLP 一样用一个端到端模型在大规模真机数据上 scaling？** 二者同属 Everyday Robots 厨房车队，是并行推进的姐妹项目——SayCan 其实早于 RT-1 约 8 个月 ["https://arxiv.org/abs/2204.01691","https://arxiv.org/abs/2212.06817"]。
+
+### 3.1 SayCan（2022-04，Google / Everyday Robots）
+
+论文 *Do As I Can, Not As I Say: Grounding Language in Robotic Affordances*（arXiv:2204.01691，v1 提交于 2022-04-04）["https://arxiv.org/abs/2204.01691"]。
+
+**解决了什么问题**：LLM 内部编码了大量世界语义知识（"spill 了该怎么收拾"），但它没有任何具身经验——能讲出合理叙事，却不知道当前这个机器人在这个厨房里此刻能做什么；直接让 LLM 输出动作会产出不可执行、与场景不符的计划 ["https://arxiv.org/abs/2204.01691"]。SayCan 的动机即"语言模型缺乏 real-world experience，难以在特定具身中做决策" ["https://arxiv.org/abs/2204.01691"]。
+
+**关键技术**：架构是**分层、非端到端**的——LLM（Say）负责高层任务分解与语义知识，机器人学来的技能及其 value function（Can）负责世界落地；每一步 LLM 给候选技能打"语义可行"分 p_LLM，技能的语言条件 value function 给"当前场景可执行"分 p_affordance，乘积 p_combined = p_LLM × p_affordance 后取 argmax，自回归展开直到 "done" ["https://arxiv.org/html/2204.01691v2"]。动作表征上，**它不直接输出连续/离散关节动作**，而是从一组预训练技能（低层 policy + 语言条件 value function + 一句自然语言描述）中选一项，真正的低层动作由各技能自己的策略执行 ["https://arxiv.org/html/2204.01691v2"]。主干为 540B PaLM（论文称 PaLM-SayCan），消融显示整体随 LLM 变大而变好（540B 执行成功率 74%，8B 仅 38%）["https://arxiv.org/html/2204.01691v2"]。数据上为移动操作机器人提出 551 个候选技能（跨 7 个技能族、17 个物体），实际部署的子集数量【未查证具体部署数】；低层技能训练数据为 68,000 条遥操作示范、10 台机器人、采集 11 个月，另有约 12,000 条成功 episode 补充 ["https://arxiv.org/html/2204.01691v2"]。效果上，101 条指令上 mock kitchen 规划成功率 84% / 执行 74%，真实厨房 81% / 60%；**去掉 affordance 仅靠 LLM 时执行成功率为 0%**，行为克隆基线 BC-NL 仅 9%——这是"接地必要性"的直接证据；错误归因 65% 来自 LLM、35% 来自 affordance ["https://arxiv.org/html/2204.01691v2"]。
+
+**遗留问题**：①模块化、非端到端——LLM 与低层 policy 两层间误差累积，论文自指 65% 错误来自 LLM 规划层 ["https://arxiv.org/html/2204.01691v2"]；②技能集合封闭——机器人只能在预定义的几十个技能里选择，新技能需单独训 value function；③affordance function 只能约束"此刻什么可做"，对需要长程组合的 TAMP 任务信息不足——即便给 oracle affordance 基线，SayCan 在 TAMP 上得分也为 0.0，这是 PaLM-E 论文的批评 ["https://ar5iv.labs.arxiv.org/html/2303.03378"]。
+
+### 3.2 RT-1（2022-12，Robotics at Google / Everyday Robots）
+
+论文 *RT-1: Robotics Transformer for Real-World Control at Scale*（arXiv:2212.06817，提交于 2022-12-13）["https://arxiv.org/abs/2212.06817"]。
+
+**解决了什么问题**：计算机视觉/NLP 已能靠"大规模、任务无关数据 + 大容量模型"实现 zero-shot 或小样本迁移，机器人领域却一直做不到，原因是真机数据采集极贵、泛化尤其关键 ["https://arxiv.org/abs/2212.06817"]。RT-1 要回答：能否像 NLP 那样，用一个**单一端到端模型**在大规模真机演示上训练，同时吞下海量多任务数据并实时闭环控制？
+
+**关键技术**：架构小而快——FiLM 条件化的 EfficientNet-B3（指令经 Universal Sentence Encoder 嵌入后用 identity-initialized FiLM 层调制 ImageNet 预训练卷积特征）→ TokenLearner（把 81 个视觉 token 软压缩成 8 个）→ 8 层 decoder-only Transformer，全模型仅 **35M 参数**（图像 tokenizer 16M、Transformer 19M），以 **3 Hz 闭环**运行（推理 <100ms）["https://ar5iv.labs.arxiv.org/html/2212.06817"]。它是**首个把动作离散化为 token 的机器人 Transformer**：动作 = 7 维臂部（x/y/z、roll/pitch/yaw、夹爪）+ 3 维底盘 + 1 维模式切换，每一维均匀分桶成 256 bins，用标准类别交叉熵 + causal masking 训练 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]。数据策略上用约 130,000 条真机演示、13 台 Everyday Robots 移动操作臂、采集 17 个月、覆盖 744 条语言指令（>700 任务），**不使用任何网络图文预训练数据**——视觉主干只做过 ImageNet 分类预训练 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]。效果上，700+ 训练指令上 97% 成功率；3000 次真机试验中，未见任务/扰动场景约 59–83%，显著高于 BC-Z 等基线，但对全新物体/全新厨房泛化明显掉点（各列精确对应表头【未逐一核对】）["https://ar5iv.labs.arxiv.org/html/2212.06817"]。
+
+**遗留问题**：①**没有 web 语义先验**——主干只见过自家厨房 13 万条轨迹，对训练分布外的新奇物体、数字/图标、抽象指令泛化差，这正是 RT-2 要用 web 预训练 VLM 解决的痛点 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]；②**256-bin 离散化的局限**——粗糙分桶带来精度损失、逐维自回归采样、难以表达多模态动作分布，这是后续 π 系列改用 flow matching 的动机之一；③仍依赖大规模自采数据（17 个月、13 台车），数据获取成本不可复制 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]。
+</script>
+
+<script type="text/markdown" id="md-sec4">
+## 4. 第二代：VLM 先验进入闭环（2023）
+
+上一代留下两个窟窿：SayCan 的分层系统在长程任务上误差累积、技能集封闭；RT-1 是"有身体、无世界知识"的端到端小模型。这一代用 PaLM-E 与 RT-2 把**互联网规模的视觉-语言先验**正式引入机器人闭环：PaLM-E 先证明"把传感器直接喂进大 LLM 并混训"可行，RT-2 再把这条路收窄成"直接输出动作 token"的端到端 VLA，并在论文标题中第一次使用 Vision-Language-Action 一词 ["https://arxiv.org/abs/2307.15818"]。
+
+### 4.1 PaLM-E（2023-03，Google / Google DeepMind）
+
+论文 *PaLM-E: An Embodied Multimodal Language Model*（arXiv:2303.03378，提交于 2023-03-06）["https://arxiv.org/abs/2303.03378"]。
+
+**解决了什么问题**：PaLM-E 要回答能不能让 LLM 自己直接吃进连续传感器模态（图像、状态向量），在同一个模型里完成具身推理，而不是外挂 affordance 模块；论文明确指出现成的通用 VLM（如 PaLI）没见过具身数据、做不了具身推理，而 SayCan 式 affordance grounding 在长程 TAMP 上信息不足 ["https://ar5iv.labs.arxiv.org/html/2303.03378"]。
+
+**关键技术**：把图像/连续状态估计通过编码器（ViT，或 3D 感知的物体中心表征 OSRT）**投影进 LLM 的词嵌入空间**，与文本 token 一起进入自注意力，从预训练 LLM（PaLM）出发端到端训编码器；最大版本 **PaLM-E-562B = 540B PaLM + 22B ViT**，是当时报道的最大视觉-语言模型 ["https://arxiv.org/abs/2303.03378","https://palm-e.github.io/"]。动作表征上，**模型输出的是自然语言 token（高层子目标/子步骤），不是低层关节动作**——移动操作任务中它逐字生成下一步计划文本（"1. Find a sponge..."），再由低层策略执行（移动操作域直接复用 RT-1 的低层策略）；Language-Table 上以 1 Hz 输出语言子目标给 5 Hz 执行的低层 policy ["https://ar5iv.labs.arxiv.org/html/2303.03378"]。覆盖三个机器人域：TAMP（96,000 训练场景）、Language-Table 桌面推挤、厨房移动操作（直接沿用 SayCan 的 2912 条运行序列训练规划模块）["https://ar5iv.labs.arxiv.org/html/2303.03378"]。最关键的发现是**多任务联合训练带来正迁移**：把互联网规模语言/图文/多模态任务与机器人任务混训后，TAMP 上只用 1% 数据（每任务 320 条样本）就显著优于单机器人训练；而 PaLI（无机器人数据）在机器人 VQA/规划上基本解不出，SayCan+oracle affordance 在 TAMP 上为 0.0 ["https://ar5iv.labs.arxiv.org/html/2303.03378"]。通用能力方面，PaLM-E-562B 在 OK-VQA 上达到 SOTA（无任务专属微调），并展现零样本多模态 chain-of-thought、少样本、跨图推理等涌现能力 ["https://arxiv.org/abs/2303.03378"]。
+
+**遗留问题**：①仍只输出高层语言子目标，闭环里还需要 RT-1/SayCan 式低层策略当"手"，不是从图像到动作的端到端 VLA；②562B 模型体积巨大、部署昂贵，全量微调时要 scale 增大才缓解灾难性遗忘 ["https://ar5iv.labs.arxiv.org/html/2303.03378"]；③它解决了"语义推理/规划的接地"，但没有解决 RT-1 留下的"自采数据贵、动作精度受离散化限制"问题——前者留给 RT-2，后者留给 π 系列。
+
+### 4.2 RT-2（2023-07，Google DeepMind）——"VLA"一词的诞生
+
+论文 *RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control*（arXiv:2307.15818，提交于 2023-07-28），官方博客同日发布 ["https://arxiv.org/abs/2307.15818","https://deepmind.google/discover/blog/rt-2-new-model-translates-vision-and-language-into-action/"]。**这是 "Vision-Language-Action (VLA)" 这一范畴的正式命名与定义来源** ["https://arxiv.org/abs/2307.15818"]。
+
+**解决了什么问题**：RT-1 证明了端到端 transformer 策略可行，但模型只见过自家厨房 13 万条轨迹，泛化受限于自采数据分布，无法获得 web 规模的语义知识（认识新物体、数字/符号、抽象指令、推理）["https://deepmind.google/discover/blog/rt-2-new-model-translates-vision-and-language-into-action/"]。RT-2 要让**同一个端到端模型**既学会从机器人观测到动作的映射，又直接享受互联网规模视觉-语言预训练的红利 ["https://arxiv.org/abs/2307.15818"]。
+
+**关键技术**：架构上直接拿已在 web 数据上预训练好的 SOTA VLM 当主干，co-fine-tune 后**不新增任何参数**就能输出动作，实例化两个：**RT-2-PaLI-X**（5B / 55B）与 **RT-2-PaLM-E-12B**（即 PaLM-E 本体作主干）["https://ar5iv.labs.arxiv.org/html/2307.15818"]。动作表征是关键创新——**把动作当"另一种语言"**：沿用 RT-1 的分桶（6-DoF 位姿 + 夹爪均匀分 256 bins，外加终止 token，共 8 个整数），把这串数字拼成字符串（如 "1 128 91 241 5 101 127"）**当作普通文本 token 塞进 VLM 训练**：PaLI-X 直接复用已有整数 token，PaLM-E 则把词表中 256 个最低频 token 覆盖为动作 token（symbol tuning），推理时 detokenize 回关节命令 ["https://ar5iv.labs.arxiv.org/html/2307.15818"]。数据策略上，机器人轨迹沿用 RT-1 指令标注数据，web 侧是 PaLI-X/PaLM-E 的图文 mixture（主体 WebLI 约 10B 图文对筛到约 1B 高质量样本）；核心配方是 **co-fine-tune（机器人数据与 web VQA 数据同批混训）**，机器人数据按采样权重占 mixture 的约 50%（PaLI-X）/ 66%（PaLM-E），训练目标即 next-token prediction（= 行为克隆损失），解码时只在合法动作 token 上采样 ["https://ar5iv.labs.arxiv.org/html/2307.15818"]。效果上，**6,000 次真机评估**显示 RT-2 在泛化/推理类新指令上比 RT-1 等基线好约 2–3 倍，最佳 RT-2-PaLI-X 平均成功率超过次优基线 RT-1 三倍以上；涌现符号理解（放到指定数字/图标上）、推理（捡最小/最大物体）、人物识别、多语言指令 ["https://arxiv.org/abs/2307.15818","https://ar5iv.labs.arxiv.org/html/2307.15818"]。消融是泛化来源的直接证据：5B 模型 from scratch 平均泛化仅 9%、只做机器人微调 52%、**co-fine-tune 才到 63%** ["https://ar5iv.labs.arxiv.org/html/2307.15818"]。此外在数据里加一步自然语言 "Plan" 再跟 "Action" 的 CoT 增强，让 RT-2-PaLM-E 能做多步语义推理（即兴锤子=石头、困了=拿能量饮料）["https://arxiv.org/abs/2307.15818"]。
+
+**遗留问题**：①动作仍继承 RT-1 的 256-bin 离散 token——精度有限、逐维自回归、难以表达多模态连续动作分布；②模型大（12B–55B）、依赖云服务推理，实时性与边缘部署受限；③机器人数据仍主要来自 RT-1 同一条自采车队，跨本体/跨场景多样性要等 OXE；④动作 token 与 VLM 原生语义空间的对齐较粗糙（靠覆盖最低频 token 解决）["https://ar5iv.labs.arxiv.org/html/2307.15818"]。
+</script>
+
+<script type="text/markdown" id="md-sec5">
+## 5. 第三代：跨机构数据与开源（2023 末–2024 初）
+
+RT-2 证明了"大 VLM + 动作 token + 混训"的范式，但它和 RT-1 一样是 Google 内部数据、闭源权重：学术界与小团队既拿不到数据也拿不到 checkpoint，机器人领域也没有像 NLP 那样的共享数据集。这一代由 Open X-Embodiment（OXE）数据联盟与 RT-X 系列补上"跨机构数据底座"，由 Octo 补上"全开源可微调通用策略"这一环 ["https://arxiv.org/abs/2310.08864","https://arxiv.org/abs/2405.12213"]。
+
+### 5.1 Open X-Embodiment 数据集与 RT-X（RT-1-X / RT-2-X，2023-10）
+
+论文 *Open X-Embodiment: Robotic Learning Datasets and RT-X Models*（Open X-Embodiment Collaboration，作者 190+ 人，arXiv:2310.08864，2023-10-13 提交，ICRA 2024）["https://arxiv.org/abs/2310.08864"]。
+
+**解决了什么问题**：①单机构数据不足——机器人学习传统上"为每个应用、每个机器人、每个环境单独训练一个模型"，而大规模多样化数据是 NLP/CV 出现通用基座模型的前提 ["https://arxiv.org/abs/2310.08864","https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"]；②跨 embodiment 泛化缺失——不同机器人动作空间、传感器配置不同，此前无法用同一策略跨平台迁移 ["https://arxiv.org/abs/2310.08864"]；③开源可复现性缺失——Google 的 RT-1/RT-2 数据与权重封闭，社区既无统一格式数据、也无可用预训练权重 ["https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"]。
+
+**关键技术**：数据归一化上，把全球已有机器人数据集汇聚、转换为统一格式（**RLDS**，Reinforcement Learning Datasets 格式），得到 **1M+ 真实机器人轨迹**，覆盖 **22 种 embodiment**（从单臂到双臂、四足）["https://arxiv.org/pdf/2310.08864v3","https://robotics-transformer-x.github.io/","https://arxiv.org/pdf/2409.03299"]。动作被统一表示为**相对于机器人夹爪坐标系（gripper frame）的 7 维向量**（x、y、z、roll、pitch、yaw、夹爪开合，或其速率形式），不涉及的自由度训练时置零——这一"夹爪系 7-DoF 归一化动作"是跨 embodiment 共训练成立的关键接口 ["https://robotics-transformer-x.github.io/"]。
+
+**机构数口径差异（并列呈现，不强行统一）**：笔记显示三处口径不同——arXiv 摘要称 **21 institutions** ["https://arxiv.org/abs/2310.08864"]；DeepMind 官方博客称 **33 个 academic labs** ["https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"]；论文 v3/项目页正文称 **34 个 robotic research labs**、汇聚 **60 个已有数据集**、**527 项技能**、**160,266 个任务**（博客约称 150,000）["https://arxiv.org/pdf/2310.08864v3","https://arxiv.org/abs/2310.08864"]。差异源于"机构 vs 实验室"统计口径与发布后持续新增数据；发布后数据集规模已继续增长（如 2025 年的 OXE-AugE 扩到 4.4M+ 轨迹）["https://arxiv.org/pdf/2409.03299","https://arxiv.org/html/2512.13100"]。
+
+**RT-1-X 与 RT-2-X 结果**：RT-1-X 即"在上述混合数据上训练的 RT-1"，**网络架构与 RT-1 完全相同**（35M、15 帧图像历史、EfficientNet + USE），性能提升被明确归因于跨 embodiment 共训练数据而非架构变化；结果上在小数据域比"各实验室自训的原始方法"或单数据 RT-1 平均高约 **50%**，在 6 个学术实验室真实机器人上评测 ["https://robotics-transformer-x.github.io/","https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types","https://arxiv.org/pdf/2310.08864v7"]。RT-2-X 即"在混合数据上共微调的 RT-2"，规模约 **55B 参数**，是当时在学术实验室执行未见任务的最大模型之一；在 emergent skills（评测任务的物体/技能出现在其他机器人数据集中、但不在 RT-2 自身数据里）上成功率约为 RT-2 的 **3 倍**，并能由介词细微变化（"on" vs "near"）调制底层动作 ["https://robotics-transformer-x.github.io/","https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"]。
+
+**遗产与遗留问题**：OXE 确立了"跨 embodiment 共训练"标准范式，此后成为社区事实标准数据集——OpenVLA 用它的 970k 轨迹、Octo 选其中 25 个数据集 800k 轨迹预训练、π0 明确采用其 cross-embodiment 训练方法学 ["https://arxiv.org/abs/2406.09246","https://octo-models.github.io/","https://isaacbs.com/papers/pi0.pdf"]。遗留问题：①正迁移主要在小数据域/同构桌面操作上显著，四足导航、双臂移动操作等形态差异极大的平台泛化未被证明 ["https://arxiv.org/abs/2310.08864"]；②RT-2-X 的离散动作 token 分辨率瓶颈推动后续转向连续动作头（具体分箱数【未查证】，不写死数字）["https://robotics-transformer.github.io/"]；③60 个异构数据集拼接，标注语言稀疏、传感/频率不一，mixture 配比本身仍是未解的 scaling 问题 ["https://arxiv.org/html/2405.12213v2"]。
+
+### 5.2 Octo（2024-05，Berkeley–Stanford–CMU–Google DeepMind）
+
+论文 *Octo: An Open-Source Generalist Robot Policy*（arXiv:2405.12213，2024-05-20 提交，RSS 2024；BibTeX 年份写 2023 但 arXiv 提交为 2024-05）["https://arxiv.org/abs/2405.12213","https://octo-models.github.io/"]。
+
+**解决了什么问题**：在 Octo 之前，通用机器人策略要么闭源（RT-2-X 55B），要么不能灵活适配新传感器/动作空间；Octo 自称是"第一个能有效微调到新观测与动作空间、且训练管线 + 权重 + 数据全开源的通用机器人操作策略"，并希望在消费级 GPU 上数小时内微调到新机器人 ["https://arxiv.org/html/2405.12213v2","https://arxiv.org/abs/2405.12213"]。
+
+**关键技术**：架构三段式（输入 tokenizer → Transformer 主干 → readout head）。语言用冻结的 t5-base（111M），实验发现更大编码器或微调编码器都无收益（归因于数据缺乏丰富自由文本标注）；图像用浅层 CNN patch 编码器（16×16 patch，第三人称 256 token、腕相机 64 token），把算力集中在 Transformer 主干（"transformer-first"）；block-wise 掩码注意力使观测 token 只能因果地关注同/更早时间步，缺失模态整体掩码，微调时可直接增删观测/任务 token 而不动预训练参数；插入可学习 readout token 再由轻量动作头解码 ["https://arxiv.org/html/2405.12213v2"]。动作表示上用**条件扩散解码头**预测连续、多模态动作分布（3 层 MLP、DDPM 目标、cosine schedule、20 步去噪），主干每次动作预测只前向一次；所有机器人统一用末端 delta 相对动作 + action chunking；消融显示扩散头优于 MSE 头或离散化动作分布 ["https://arxiv.org/html/2405.12213v2"]。规模三档：Tiny 10M / Small 27M / Base 93M；预训练从 OXE 选 25 个数据集、约 80 万条轨迹；TPU v4-128 训约 14 小时，单张 A5000(24GB) 微调约 5 小时 ["https://octo-models.github.io/","https://arxiv.org/html/2405.12213v2"]。结果上，零样本语言指令成功率 WidowX 0.50 / UR5 0.70 / RT-1 Robot 0.80，对比 RT-1-X（0.20/0.35/0.60）显著更强、与 55B RT-2-X（0.50/—/0.85）相当；约 100 条目标域演示微调后 6 个设置平均 0.72 ["https://octo-models.github.io/"]。
+
+**遗留问题**：①腕相机信息处理不佳——论文自述很多时候只用第三人称相机反而比第三人称 + 腕相机更好 ["https://arxiv.org/html/2405.12213v2"]；②规模仅 93M、语言用冻结 t5-base，缺乏互联网 VLM 预训练，开放词汇语义推理弱于带大 VLM 的模型——这正是 OpenVLA 后来居上的原因 ["https://arxiv.org/html/2405.12213v2","https://arxiv.org/abs/2406.09246"]；③预训练数据只是 OXE 子集（25/60 数据集、800k/1M+），评测集中在桌面操作，长程、移动操作、接触富集任务泛化有限 ["https://octo-models.github.io/"]。
+</script>
+
+<script type="text/markdown" id="md-sec6">
+## 6. 第四代：开源 VLA（2024）
+
+Octo 证明了开源通用策略可微调，但它只有 93M、语言编码器冻结，语义推理能力远不如 RT-2-X 这类带大 VLM 的闭源模型。这一代的 OpenVLA 把"开源 VLM 主干 + OXE 数据 + 动作 token 词表扩展"三者配齐，让 7B 开源模型在 29 个任务上反超 55B 闭源 RT-2-X，第一次把 VLA 拉进实验室可复现区间 ["https://arxiv.org/abs/2406.09246"]。
+
+### 6.1 OpenVLA（2024-06，Stanford / UC Berkeley 等）
+
+论文 *OpenVLA*（arXiv:2406.09246，2024-06-13 提交，v3 2024-09-05）["https://arxiv.org/abs/2406.09246"]。
+
+**解决了什么问题**：此前 VLA（以 RT-2 / RT-2-X 为代表）基本闭源、不可微调——RT-2-X 达 55B，学术界与小团队拿不到权重，也没人系统研究如何高效把 VLA 微调到新机器人/新任务 ["https://arxiv.org/abs/2406.09246"]。OpenVLA 把 VLA 做成开源、可在消费级 GPU 上微调的 7B 基座。需要强调：它**直接继承 RT-2 的离散动作 token 路线，没有解决离散动作表征本身的精度/多模态局限**——这一局限要等到 π0 才被正面处理 ["https://arxiv.org/abs/2406.09246"]。
+
+**关键技术**：架构 7B 参数，视觉-语言主干基于 **Prismatic-7B**——Llama 2 语言模型 + 一个融合 **DINOv2 与 SigLIP** 预训练特征的视觉编码器，在多粒度上提取视觉特征 ["https://arxiv.org/abs/2406.09246"]。动作表征沿用离散 token 路线：把连续动作逐维 **quantile 分箱后映射到 LLaMA tokenizer 里最不常用的 256 个 token**，动作预测被 framing 成 vision-language next-token 自回归任务 ["https://arxiv.org/html/2510.01642v1","https://arxiv.org/pdf/2504.19854v1.pdf"]。数据策略上在 OXE 的 **97 万条（970k）真实机器人操作轨迹**上微调；网络预训练来自互联网级 VLM 知识，机器人侧仅用开源 OXE 数据、没有自采私有引擎 ["https://arxiv.org/abs/2406.09246","https://openvla.github.io/"]。结果上，在 29 个任务、多机器人 embodiment 上以 7× 更少参数（7B vs 55B）**绝对成功率反超 RT-2-X 16.5%**，并比从零训练的 Diffusion Policy 高 20.4%；可用 LoRA 在消费级 GPU 上微调、量化部署不掉下游成功率，开放权重与训练代码 ["https://arxiv.org/abs/2406.09246"]。真机评测细节（可查证部分）：Google Robot 上 12 个任务（5 个 in-distribution + 7 个 OOD，每任务 5 rollout），BridgeData V2/WidowX 上 17 个任务，覆盖 visual / motion / physical / semantic generalization 与 language grounding 五类泛化维度，每任务 10 rollout、含部分奖励（叠杯半完成给 0.5）——这组评测即 RT-Bench 体系可查证部分 ["https://arxiv.org/html/2406.09246"]。
+
+**遗留问题**：①离散 token 的固有局限——逐维分箱 + 自回归生成在高频、高精度、多模态灵巧操作上精度受限，逐 token 解码在高频控制下延迟高，这是后来 OpenVLA-OFT 改回归头、π0 改 flow matching 的动机 ["https://arxiv.org/html/2511.18960v2"]；②评测仍高度分布于训练相近场景，跨环境/跨 embodiment 的开放世界泛化弱（π0.5 博客明确把"π0 及近期 VLA 都在与训练相近环境评测"列为待解问题）["https://www.pi.website/blog/pi05"]。
+</script>
+
+<script type="text/markdown" id="md-sec7">
+## 7. 第五代：π 系列与生成式动作（2024 末–2025）
+
+OpenVLA 把离散 token 路线开源化到了巅峰，但离散分箱在高频灵巧、双手操作上的精度与多模态瓶颈仍在。这一代的 π0 用 **flow matching** 连续动作块正面替换离散 token，π0.5 再把泛化从"相近环境"推到"开放世界新家庭"——架构与数据两条战线同时升级 ["https://arxiv.org/abs/2410.24164","https://www.pi.website/blog/pi05"]。
+
+### 7.1 π0 / pi-zero（2024-10-31，Physical Intelligence）
+
+论文 *π0: A Vision-Language-Action Flow Model for General Robot Control*（arXiv:2410.24164，RSS 2025）["https://arxiv.org/abs/2410.24164"]。
+
+**解决了什么问题**：承 RT-2/OpenVLA 的离散动作 token 路线，离散分箱在高频、灵巧、双手操作（叠衣服、擦桌子、装箱）上精度不足，且自回归逐 token 解码难以刻画动作的多模态分布（同一物体常有多种合理抓法）["https://aiwiki.ai/wiki/pi_zero"]。π0 的目标是用一个网络同时吃互联网级 VLM 语义知识，又能输出**连续、高频、多模态**的机器人动作，并跨单臂/双臂/移动操作机器人泛化 ["https://arxiv.org/abs/2410.24164"]。
+
+**关键技术**：架构为**双专家、单 Transformer（受 Transfusion 启发）**——VLM 主干用开源 **PaliGemma（3B）**继承互联网语义知识，新增一个从零初始化的 **action expert（约 300M）**，总计约 **3.3B 参数**；单一 Transformer 多目标训练：离散 token 走 cross-entropy（语言），连续动作走 flow matching loss ["https://arxiv.org/html/2410.24164v2/"]。动作表征是本主线关键转折：不再分箱，而是用 **conditional flow matching** 学向量场，把高斯噪声"积分"成一段未来动作轨迹，一次预测一个 **H=50 步 action chunk（约 1 秒 @50Hz）**；推理时约 10 步积分（去噪）解码（【媒体/转述】）；为统一不同关节数的机器人，state/action 向量 padding 到训练集最大维度（公开配置约 18 维，【媒体/转述】）["https://aiwiki.ai/wiki/pi_zero","https://aiwiki.ai/wiki/pi0/raw"]。数据策略上，私有自采约 **9.03 亿 timesteps（约 1 万小时）、68 个任务、7 种机器人配置**（【媒体/转述】，PI 官方论文未在核到的正文里给出逐字数字），叠加公开数据 OXE、Bridge v2、DROID（【媒体/转述】）["https://www.cloderic.com/content/2025-02-27-notes-on-pi0","https://charonhub.deeplearning.ai/p0-a-machine-learning-system-for-household-robotics/","https://aiwiki.ai/wiki/pi0/raw"]。多 embodiment 上，单臂、双臂、移动操作统一在一个模型里，叠衣服、擦桌子、组装箱子等双手任务预训练后 zero-shot 即可执行 ["https://arxiv.org/abs/2410.24164"]。2025-02-04 以 openpi 仓库（Apache 2.0，含 Gemma 许可）开源 π0 代码与权重，同时发布自回归版 π0-FAST ["https://www.pi.website/blog/openpi"]。
+
+**遗留问题**：①评测仍在与训练相近的环境中，开放世界泛化（全新厨房/卧室、杂乱家庭）不足——这是 π0.5 直接要补的洞 ["https://www.pi.website/blog/pi05"]；②flow matching 多步去噪带来推理延迟——第三方实测 π0 类 flow 策略在 RTX 4090 上约 300–600ms、控制频率仅 1.5–3Hz（【媒体】）["https://vnrobo.com/en/blog/lerobot-g1-pi0fast-whole-body"]；③长时程任务、显式高层规划、跨任务组合泛化尚未出现。
+
+### 7.2 π0.5（2025-04-22，Physical Intelligence）
+
+官方博客 *π0.5: a VLA with Open-World Generalization* ["https://www.pi.website/blog/pi05"]。
+
+**解决了什么问题**：π0 及当时其他 VLA 都在与训练分布接近的环境里评测；π0.5 要解决**开放世界泛化**——把移动操作机器人放进训练数据里完全没见过的家庭，完成收拾厨房/卧室、铺床等长时程任务。官方明确：π0.5 的目标**不是**新增高灵巧技能，而是"泛化到新场景"；它"远非完美"，常在高层语义推断和底层动作上犯错 ["https://www.pi.website/blog/pi05"]。
+
+**关键技术**：架构基于 π0 扩展，同一模型里**既有离散自回归解码、又有 flow matching 连续解码**——离散路径输出高层子任务语言（如 "pick up the pillow"），flow matching 路径输出底层电机指令（50 步/1 秒连续 action chunk），action expert 约 300M（与 π0 同量级）；形成"高层语言推理 + 底层连续动作"的思维链式双层 ["https://www.pi.website/blog/pi05"]。核心数据策略是**异构数据 co-training**：WD（Web Data，图像 captioning/VQA/检测）、ME（Multiple Environment，用非移动机器人进入大量不同家庭采的数据）、CE（Cross Embodiment，π0 原跨 embodiment 数据），外加口头指导演示与高层子任务标注 ["https://www.pi.website/blog/pi05"]。官方消融（OOD = 未见过的新家）：完整 π0.5 的 OOD follow rate **94%** / OOD success **94%**；去掉 WD 降至 80%/74%，去掉 CE 降至 67%/49%，去掉 ME 降至 33%/31%——结论是 **Web Data 对 OOD 物体识别帮助最大，来自其他机器人的数据（ME+CE）在所有条件下都关键** ["https://www.pi.website/blog/pi05"]。Scaling 上，随训练环境数增加泛化单调上升，约 100 个训练环境后性能逼近"直接在测试环境训练"的上界基线。
+
+**遗留问题**：①灵巧/新技能仍需微调才能到最好水平，长时程任务常失败；②跨 embodiment 的大形态差距上表现差（π0.7 论文显示 π0.5 在大 embodiment gap 任务上显著退化）["https://arxiv.org/html/2604.15483v1"]；③数据里没有"失败/次优数据"的系统性利用，也没有显式视觉子目标/策略元数据——这是 π0.7 要补的。
+
+> 衔接备注：π0.5 之后、π0.7 之前还有 **π0.6（约 2025-11）**，走 RL 后训练（Recap 算法）刷单任务成功率/吞吐，产出 π*0.6 专家模型；π0.7 论文明确 "builds on π0.6-MEM 架构"。π0.6 非本报告点名对象，仅作衔接 ["https://arxiv.org/html/2604.15483v1","https://hokai.io/hub/companies/physical-intelligence"]。
+</script>
+
+<script type="text/markdown" id="md-sec8">
+## 8. 终点深挖：π0.7（2026-04，Physical Intelligence）
+
+π0.7 是本报告的重点章节。第一信源为官方博客 *π0.7: a Steerable Model with Emergent Capabilities*（2026-04-16）与论文 *π0.7: a Steerable Generalist Robotic Foundation Model with Emergent Capabilities*（arXiv 2604.15483v1，同日挂出）["https://www.pi.website/blog/pi07","https://arxiv.org/html/2604.15483v1"]。下文每条结论标注信源类型（官方/媒体）。
+
+### 8.1 发布信息【官方】
+
+名称确为 **π0.7**，发布时间 **2026-04-16**，与博客同日挂 arXiv（2604.15483）["https://www.pi.website/blog/pi07","https://arxiv.org/html/2604.15483v1"]。官方定位是一个 **steerable（可引导）的通用机器人基座模型**，出现"step-change in generalization"，首次展示机器人**组合泛化（compositional generalization）的早期迹象**——把不同任务学到的技能重新组合去做训练里没见过的事（如操作新厨房电器、在从未叠过衣服的新机器人上叠衣服）["https://www.pi.website/blog/pi07"]。
+
+### 8.2 架构【官方】
+
+总参数约 **5B**，构成为：**VLM 主干 4B**（初始化自 **Gemma3 4B**，含一个 **400M 视觉编码器**）；**MEM 风格的 video/历史编码器**（对历史观测做时间+空间压缩，任意帧数压成固定 token 数）；**flow matching action expert 860M**（媒体对"约 5B"的转述与官方一致）["https://arxiv.org/html/2604.15483v1","https://www.aiexpertmagazine.com/physical-intelligence-pi-0-7-model-composes-skills-fragmented-data/"]。主干从 π0/π0.5 的 PaliGemma 3B 升级到 Gemma3 4B，动作专家从 300M 增大到 860M，并引入 MEM 历史编码器与视觉子目标条件 ["https://arxiv.org/html/2604.15483v1"]。
+
+flow matching 延续：action expert 仍是 flow matching——860M transformer，固定 **50 个 action token = 50 步 action chunk**，token 间双向注意力并交叉注意 VLM 主干激活，用 adaptive RMSNorm 注入 flow matching 时间步信息 ["https://arxiv.org/html/2604.15483v1"]。
+
+分层引导（不是独立大规划器）：运行时由一个**基于同一架构的高层语义政策**输出语言子任务（subtask instruction）；子目标图像由一个**轻量 world model** 生成（初始化自 **BAGEL 14B** mixture-of-transformers：7B ViT LLM 主干 + 7B 生成主干，用 CFM 损失训练，每 **Δ=4 秒**重生成一次子目标）——即高层语言子任务 + world-model 子目标图像共同"steer"底层 flow matching 策略 ["https://arxiv.org/html/2604.15483v1"]。
+
+训练配方上有**知识绝缘（KI）**：VLM 主干用 FAST token 做监督；action expert 虽注意主干全部激活，但**梯度不回传到主干**，主干只受相对稳定的离散 cross-entropy 损失训练，保护预训练知识不被机器人梯度破坏 ["https://arxiv.org/html/2604.15483v1"]。观测编码：最多 4 路相机（前视 + 双腕 + 可选后视），每路最多 6 帧历史（步幅 1 秒），最多 3 张子目标图，图像 resize 到 448×448，block-causal 注意力；本体状态 q_t 改用线性投影嵌入（不同于 π0.6 用离散文本 token 表示）["https://arxiv.org/html/2604.15483v1"]。训练时仿真 0–12 步推理延迟（对应 50Hz 机器人上最大 240ms 延迟），即 **training-time real-time action chunking（RTC）**，保证延迟下动作平滑 ["https://arxiv.org/html/2604.15483v1"]。
+
+### 8.3 数据策略【官方】
+
+构成（论文 VI-A 定性描述）：大量不同机器人平台的演示数据（静态/移动、单臂/双臂，实验室类与家庭类、野外家庭）；**大量策略评测产生的自主（autonomous）数据**；人在策略 rollout 中的介入（interventions）；开源机器人数据集（文中举例 DROID）；**第一人称人类视频（egocentric human video）**；互联网侧非机器人辅助数据（目标定位、属性预测、VQA、纯文本、视频 captioning）["https://arxiv.org/html/2604.15483v1"]。显著区别于经典 VLA 的做法是**重度使用次优/失败数据**——包括低质量演示（失败段、带错的成功段）以及 **π*0.6 RL 后训练模型在评测中收集的数据**，相当于把 RL 专家的行为蒸馏进通用模型；靠 episode metadata 标注来"区分"不同质量数据 ["https://arxiv.org/html/2604.15483v1"]。**数据总量（小时数/timestep 数）【未公开/未查证】**——官方博客与论文只给构成与消融，未披露 π0.7 总训练数据量 ["https://arxiv.org/html/2604.15483v1"]。
+
+核心创新是 **diverse context / prompt conditioning**：给每段数据加多种模态提示，不仅说"做什么"还说"怎么做"——子任务语言指令、子目标图像、episode 元数据（速度按 500 步分箱、质量 1–5 分、是否出错标注）、控制模式（joint/ee）；训练时对每个 prompt 组件随机 dropout（子目标图仅 25% batch、有子目标时 30% 丢掉子任务、元数据整体 15% 全丢 + 各组件 5%），使测试时可灵活组合任意子集 ["https://arxiv.org/html/2604.15483v1","https://www.pi.website/blog/pi07"]。
+
+### 8.4 能力边界【官方】
+
+- **开箱即用的专家级灵巧**：无需任务专项后训练，即可做意式咖啡机、叠衣服、取垃圾袋、折箱子、削皮等，并在成功率与吞吐上**追平甚至超过**用 Recap/RL 专项训练的 π*0.6 专家（靠把 RL 经验蒸馏进通用模型）["https://www.pi.website/blog/pi07","https://arxiv.org/html/2604.15483v1"]。
+- **指令泛化**：在 **4 个未见厨房 + 2 个未见卧室**里执行 3–6 步指令序列；在复杂/非常规指称（如 "pick up an object I would use to eat soup"）上显著优于 π0.5/π0.6；world-model 生成的子目标图进一步提升 ["https://arxiv.org/html/2604.15483v1"]。
+- **跨 embodiment**：把用小型静态双臂机器人采的**叠 T 恤**任务，zero-shot 迁移到**双臂 UR5e**（该硬件上没有任何叠衣服数据），成功率达到"首次在 UR5e 上尝试该任务的专家人类操作员"水平（10 名操作员、约占操作团队前 2%、平均 375 小时遥操经验）；策略还会自发发现适配新形态的新抓法（如 UR5e 上改用垂直抓握而非源机器人的倾斜抓握）["https://www.pi.website/blog/pi07","https://arxiv.org/html/2604.15483v1"]。
+- **组合泛化**：zero-shot 提示操作**空气炸锅烤红薯**只能部分完成；改用逐步**语言 coaching** 后明显变好；再用 coaching 数据微调一个高层政策，即可完全自主执行、无需任何遥操作；同类任务还有卸载空气炸锅、烤贝果 ["https://www.pi.website/blog/pi07"]。媒体补充（【媒体】）：称 zero-shot 空气炸锅成功率约 5%，经约 30 分钟语言引导后升到约 95%——**官方正文未给出这两个具体百分比**，仅定性描述，故百分比以媒体转述对待 ["https://www.aiexpertmagazine.com/physical-intelligence-pi-0-7-model-composes-skills-fragmented-data/"]。
+- **抗数据集偏置**：在 "Reverse Bussing"、"Reverse Fridge→Microwave" 等违背数据常见做法的任务上，π0.7 显著优于前代，说明它真的听语言指令而非盲目复制数据分布；其中 "Reverse Fridge→Microwave" 必须靠生成子目标图（π0.7 (GC)）才成功 ["https://arxiv.org/html/2604.15483v1"]。
+- **多臂协作**：以双臂（bimanual）灵巧为主（叠衣、装箱、意式咖啡），也覆盖单臂/移动操作；**未见"多机器人协作（multi-robot coordination）"的公开演示——【未公开/未查证】** ["https://arxiv.org/html/2604.15483v1"]。
+
+### 8.5 与 π0.5 的具体差异【官方】
+
+主干升级（PaliGemma 3B → Gemma3 4B；动作专家 300M → 860M；新增 MEM 与子目标图像条件）；目标从"新环境泛化"（π0.5 在没见过的家里做已知类清洁）升级到"新任务组合泛化"（π0.7 做训练里没见过的新任务，且开箱达到专家级灵巧）；数据利用从高质量演示 + web 数据升级为失败/次优自主数据 + RL 专家蒸馏 + 第一人称人类视频并用元数据消歧；引导方式从文本指令升级为子目标图像、速度/质量/出错元数据、控制模式等多模态 steer 信号；在大 embodiment gap 上，π0.5 显著退化、π0.6 仍可、π0.7 在最大差距（小型静态双臂 → 单臂 UR5e、小型双臂 → 大型双臂 UR5e 叠衣）上显著优于前代 ["https://arxiv.org/html/2604.15483v1","https://www.pi.website/blog/pi07","https://www.pi.website/blog/pi05"]。
+
+### 8.6 已知局限与失败模式【官方】
+
+- **zero-shot 成功率仍明显低于分布内**：见得多的任务成功率常 >90%，而**未见任务/未见任务-机器人组合成功率落在 60–80% 区间**（论文 Discussion 原话）["https://arxiv.org/html/2604.15483v1"]。
+- **长时程未见任务不能纯 zero-shot**：如"烤红薯"这类约 5 分钟、多阶段任务，直接 prompt 不 work，必须靠语言 coaching，或用 coaching 数据训出高层政策后才能自主 ["https://arxiv.org/html/2604.15483v1"]。
+- **"见过/没见过"难以界定**：数据太大太杂，很难确证某个任务到底是不是真 unseen——这是实验上的诚实局限 ["https://arxiv.org/html/2604.15483v1"]。
+- **推理开销**（官方 Appendix A-D）：π0.7 + 高层政策跑在单张 H100 上；最小配置（3 相机、5 步去噪、训练时 RTC）**38ms**，但开启 MEM 编码器 + 子目标图后最坏 **127ms**；world model 生成子目标图要 4×H100 张量并行 + 8-bit 量化 + SageAttention，25 步去噪约 **1.25 秒**，靠异步流水线掩盖延迟 ["https://arxiv.org/html/2604.15483v1"]。
+- **开放权重/标准 benchmark 数字表**：截至本调研，π0.7 是否开放权重、是否有标准化 benchmark 逐项数字表——【未公开/未查证】（官方博客强调招聘/合作，未宣布开源）["https://www.pi.website/blog/pi07"]。
+</script>
+
+<script type="text/markdown" id="md-sec9">
+## 9. 专题：动作表征演进线——每一步解决了什么、代价是什么
+
+动作表征是 VLA 发展史中最能体现"权衡"的一条暗线：从不直接输出动作，到离散 token 自回归，再到 diffusion / flow matching 连续动作块，最后形成"离散语言高层 + 连续动作底层"的双层结构。
+
+**第一步：SayCan（2022）——分层技能选择，不输出底层动作。** 它从预训练技能集合（每个技能 = 低层 policy + value function + 一句自然语言描述）中选一项，真正的关节动作由技能自己的策略执行 ["https://arxiv.org/html/2204.01691v2"]。解决了"LLM 输出不可执行"的问题；代价是技能集封闭、学不会表外新动作，且两层系统误差累积（65% 错误来自 LLM 规划层）。
+
+**第二步：RT-1（2022）——首个动作离散 token。** 7+3+1 维动作每维均匀分 256 bins，类别交叉熵自回归 ["https://ar5iv.labs.arxiv.org/html/2212.06817"]。解决了"端到端、单模型实时闭环"的问题；代价是分桶量化精度损失、逐维自回归、无法表达多模态动作分布。
+
+**第三步：RT-2（2023）——把离散动作当"另一种语言"。** 沿用 256 bins，动作拼成字符串 token（如 "1 128 91 241 5 101 127"）塞进 VLM 词表（PaLI-X 复用整数 token，PaLM-E 覆盖 256 个最低频 token），推理时 detokenize 回关节命令 ["https://arxiv.org/pdf/2307.15818","https://aiwiki.ai/wiki/rt_2"]。解决了"让机器人控制复用一个已预训练好的 VLM、把互联网语义知识直接迁移进控制"的问题，动作变"语言"、无需单独造解码头；代价是继承离散化全部局限（bin 粒度精度、自回归慢、高频延迟大、多模态被"平均"成单峰）["https://arxiv.org/pdf/2307.15818"]。
+
+**第四步：OpenVLA（2024-06）——离散 token 路线的开源巅峰。** 沿用 RT-2 思路，但动作 token 写进 LLaMA tokenizer 最不常用的 256 个 token、用 quantile 分箱，在 OXE 970k 轨迹上 next-token 预测 ["https://arxiv.org/html/2510.01642v1","https://arxiv.org/pdf/2504.19854v1.pdf"]。解决了"把离散路线开源、7B 化、可 LoRA 微调"的问题，证明小 7× 的模型可反超 55B 闭源 RT-2-X ["https://arxiv.org/abs/2406.09246"]；代价是**原封不动继承了离散 token 的全部固有局限**——它是离散路线的开源巅峰，而非动作表征的革新。
+
+**第五步：Octo（2024-05）与 π0（2024-10）——连续动作头登场。** Octo 在独立主干上接条件 diffusion 解码头（3 层 MLP、20 步去噪）预测连续多模态动作分布，消融显示优于 MSE 头或离散分布 ["https://arxiv.org/html/2405.12213v2"]；π0 更进一步，用 **conditional flow matching** 学向量场，把高斯噪声积分成一段 **H=50 步连续 action chunk**，约 10 步去噪解码，VLM 主干负责语义、独立 action expert（约 300M）负责连续动作生成（Transfusion 式多目标单 Transformer）["https://aiwiki.ai/wiki/pi_zero"]。解决了三件事：连续动作摆脱 bin 量化精度损失；显式建模多模态动作分布（多种合法策略）适配灵巧/双手/高频任务；action chunk + 少步去噪使轨迹平滑、比逐维自回归更适合高频控制 ["https://arxiv.org/pdf/2410.24164.pdf?_sp=fe5e3699-dc47-4a51-b678-d7cef4b61754"]。代价是：推理要跑多步去噪/积分，比单步离散解码更重、延迟更高（第三方实测 flow 策略延迟可达数百 ms）；引入额外 action expert 参数与训练复杂度；需要大规模多机器人自采数据（约 1 万小时，【媒体/转述】）才能喂出泛化 ["https://vnrobo.com/en/blog/lerobot-g1-pi0fast-whole-body","https://www.cloderic.com/content/2025-02-27-notes-on-pi0"]。
+
+**第六步：π0.5 / π0.6 / π0.7——在 flow matching 母版上"加引导、加记忆、加数据多样性"。** π0.5 保留 flow matching 连续动作 expert（50 步/1 秒），**新增离散自回归路径输出高层语言子任务**，形成"高层语言推理（离散 AR）+ 底层连续动作（flow matching）"双层 ["https://www.pi.website/blog/pi05"]；π0.6 在 flow matching 基座上做 RL 后训练（Recap），把强化学习加进动作优化但不改动作表征 ["https://arxiv.org/html/2604.15483v1"]；π0.7 把 flow matching 放大到 860M expert、50 步 chunk、RTC，核心新增多模态 context conditioning（子任务语言、子目标图像、速度/质量/出错元数据、控制模式），并用训练时 RTC 与推理优化把最小延迟压到 38ms、最坏 127ms 部分对冲延迟代价，同时把 π*0.6 RL 专家经验蒸馏进通用模型 ["https://arxiv.org/html/2604.15483v1"]。
+
+**净效果**：flow matching 从"新动作表征"变成 π 系列默认底座；"动作怎么表示"的问题基本收敛，战场转向"如何喂更多样/更次优的数据、如何用 prompt/子目标/元数据引导策略、如何蒸馏 RL 专家、如何压低推理延迟"。
+</script>
+
+
+
+
+</main>
+<!--CONTENT-->
+<script type="text/markdown" id="md-sec10">
+## 10. 专题：评估基准演进——从"单任务成功率"到"评测真空与自动判定"
+
+**基准时间线**：2023-06 LIBERO（UT Austin，NeurIPS 2023）→ 2023-10 Open X-Embodiment / RT-X 跨具身评测协议 → 2024-02 The Colosseum（RLBench 扰动基准）→ 2024-05 SIMPLER（仿真复现真机设置）→ 2024 RT-Bench 体系（Google 真机 12+17 任务套件）→ 2024-10 π0 自报 5 个真机任务 → 2025-04 π0.5 开放世界/OOD 评测 → 2025 Berkeley AutoEval 真机自主评测 → 2026-04 π0.7 与自家 RL 专家对比、无外部 benchmark ["https://arxiv.org/pdf/2306.03310v2.pdf","https://arxiv.org/abs/2310.08864","https://arxiv.org/pdf/2402.08191?ref=https%3A%2F%2Fgithubhelp.com","https://arxiv.org/html/2405.05941","https://arxiv.org/html/2406.09246","https://www.pi.website/blog/pi05","https://arxiv.org/html/2503.24278v1/","https://www.pi.website/blog/pi07"]。
+
+**LIBERO（2023）**：VLA 时代事实上的仿真操作标准基准——4 个 task suite（Goal / Spatial / Object / Long），每个 10 个连续到达任务，任务族设计显式区分"目标迁移/空间迁移/物体迁移/长时程迁移"四类泛化维度；OpenVLA、π0/π0-FAST、GR00T 系列及后续几乎所有开源 VLA 论文都报告 LIBERO 分数 ["https://arxiv.org/pdf/2306.03310v2.pdf","https://rpl.cs.utexas.edu/publications/2023/12/10/liu-neurips23-libero/","https://vnrobo.com/en/blog/vla-lerobot-13-pi0fast-training"]。
+
+**OXE / RT-X（2023）**：建立了 VLA 时代第一个跨具身共享数据集 + 共享评测协议（6 种机器人上共 3600 次评测试验），结论是 RT-1-X 比专属 baseline 平均高约 50%、RT-2-X 在涌现技能上约为 RT-2 的 3 倍；后续 CrossFormer、OpenVLA、GR00T 数据混合均以此为参考坐标系 ["https://www.robot-learning.ml/2023/files/paper18.pdf","https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types","https://arxiv.org/pdf/2310.08864v6"]。
+
+**The Colosseum（2024）**：在 RLBench 上施加系统扰动（视觉、动作、物体），把"单一任务成功率"细化为沿泛化维度的扰动响应曲线，是早期仿真泛化评测代表 ["https://arxiv.org/pdf/2402.08191?ref=https%3A%2F%2Fgithubhelp.com"]。
+
+**SIMPLER（2024，CoRL）**：在仿真中复现 Google Robot 与 WidowX BridgeV2 两类真机评测设置，核心贡献是证明**仿真评测与真机性能强相关**，为降低真机评测成本提供工作流，后来成为 AutoEval 等的 baseline 仿真环境 ["https://arxiv.org/html/2405.05941","https://simpler-env.github.io/","https://arxiv.org/html/2503.24278v1/"]。
+
+**RT-Bench 体系（Google，2024）**：真机评测事实标准之一——可查证部分来自 OpenVLA 论文附录：Google Robot 12 任务（5 ID + 7 OOD）、Bridge/WidowX 17 任务覆盖五类泛化维度、每任务 10 rollout 含部分奖励。**【未查证】**：该套件独立论文编号与项目页（rt-bench.github.io 现无法访问）未独立找到原始论文 ["https://arxiv.org/html/2406.09246"]。
+
+**π 系列自报评测**：π0 在 5 个真机任务（叠衬衫、收拾桌面 easy/hard、装杂货袋、拿吐司）上与 OpenVLA、Octo 相同训练步数对比 ["https://arxiv.org/html/2410.24164v4"]；π0.5 主动把评测搬到完全没见过的家庭，指标为 subtask 平均成功率与跟随率 ["https://www.pi.website/blog/pi05"]；π0.7 与自家 RL 微调的 π*0.6 专家比成功率与 throughput（单位时间完成任务数），展示组合泛化 ["https://www.pi.website/blog/pi07"]。**关键自陈**：PI 官方与媒体均指出外部通用机器人策略的标准化 benchmark 尚不存在，π0.7 数字为自报、与自家前作对比，无法外部独立验证 ["https://awesomeagents.ai/news/physical-intelligence-pi07-generalist-robot/","https://liveinthefuture.org/stories/physical-intelligence-pi07-robot-generalization-data-gap"]。
+
+**AutoEval（Berkeley，2025）**：在真实世界**自主**评估通用机器人策略——用视觉模型自动判定任务成败，代表评测从"人工数 rollout"走向"自动化、可大规模并行"的趋势；同期 ArmnetBench、VLA-REPLICA、ManipArena 等 2025–2026 新工作试图用低成本真机农场 + 自动判定重建可比基准 ["https://arxiv.org/html/2503.24278v1/","https://arxiv.org/html/2605.20774","https://arxiv.org/html/2603.28545v2"]。
+
+**一句话趋势**：评测正从"仿真单任务 SR"向"真机 + 仿真配对、沿泛化轴分层、长时程/开放世界、自动判定、跨本体"演进；但截至 π0.7 发布时，业界仍未出现被普遍接受的"机器人界 ImageNet/MMLU"——这是当前 VLA 横向对比最大的方法论短板 ["https://liveinthefuture.org/stories/physical-intelligence-pi07-robot-generalization-data-gap"]。
+</script>
+
+<script type="text/markdown" id="md-sec11">
+## 11. 全景：同期代表模型事实卡
+
+主线之外，2024–2025 年同期出现了一批代表模型，各有差异化路线（人形、状态空间模型、跨具身、闭源旗舰、双臂 diffusion）。
+
+**GR00T N1（NVIDIA，2025-03-17，GTC 2025）**：面向人形机器人的开放 VLA 基础模型，号称"世界首个开放的通用人形机器人基础模型"；动作表征为连续动作，由 diffusion transformer（DiT）动作头实时生成，与 System 2 VLM 模块端到端联合训练；独特贡献是双系统架构（System 2 视觉-语言推理 + System 1 高频运动控制），训练数据含第一视角人类视频、真机/仿真轨迹与合成数据；局限是主打人形本体（Fourier GR-1、1X 等），真机家庭任务覆盖面有限，后续很快推出 N1.5/N1.6 迭代说明首版仍在快速演进 ["https://research.nvidia.com/publication/2025-03_nvidia-isaac-gr00t-n1-open-foundation-model-humanoid-robots","https://arxiv.org/pdf/2503.14734v2","https://research.nvidia.com/labs/gear/gr00t-n1_5/?ref=vastkind.com"]。
+
+**RoboMamba（2024-06，北京大学等）**：用 Mamba 状态空间模型（SSM）替代 Transformer backbone 的高效 VLA；动作表征为连续 SE(3) 末端位姿回归（6-DoF 位置 + 旋转，夹爪任务加 1 维），由冻结主干上的小型 MLP policy head 直接回归，**非离散 token、非 diffusion/flow**；3.2B 参数，仅微调 0.1%（3.7M policy head）、数十分钟即可获得操作能力，自称推理速度比同期 VLA 快约 3 倍；局限是逐步 SE(3) 回归、未用 action chunking，主要在 SAPIEN 仿真与 Franka 单臂上验证，泛化证据有限 ["https://ar5iv.labs.arxiv.org/html/2406.04339","https://www.semanticscholar.org/paper/RoboMamba%3A-Multimodal-State-Space-Model-for-Robot-Liu-Liu/f52c5f1ec94e8a2bf27247bcde7893572c7d53d1/figure/2"]。
+
+**CrossFormer（UC Berkeley + CMU，CoRL 2024 Oral，Top 4%）**：单一 transformer 策略跨 30 种 embodiment 做操作/导航/locomotion/航空，无需观测与动作空间对齐；连续动作，decoder-only transformer 共享 backbone、末端按 embodiment 类别接独立 action heads（双臂 50Hz、四足 12-DoF）；在 900K 轨迹、30 种机器人上训练，首次证明跨具身策略可同时控制单臂、双臂、轮式导航、四足低层运动，比此前跨具身工作在复杂导航/操作上平均成功率高约 3 倍；局限是语言条件较弱、更接近跨具身模仿学习而非完整 VLA，动作头仍按 embodiment 类别分开、并未真正统一动作空间。**【标题勘误】**：调研中曾出现的 "CrossFormer: A Versatile Vision-Language-Action Model..." 标题未查证到对应论文，项目页实际标题为 *Scaling Cross-Embodied Learning: One Policy for Manipulation, Navigation, Locomotion and Aviation*（arXiv:2408.11812）["https://crossformer-model.github.io/"]。
+
+**Gemini Robotics（Google DeepMind）**：2025-03-12 首发 Gemini Robotics + Gemini Robotics-ER；2025-06-24 推出 On-Device 端侧版；2025-09-25 推出 1.5 版。定位为基于 Gemini 2.0、把"动作"作为新输出模态的旗舰闭源 VLA，配套 ER（Embodied Reasoning）模块做空间理解与规划；动作表征为连续 motor commands（具体动作头结构未公开），1.5 版在动作前显式输出推理过程；独特贡献是把 Gemini 2.0 的互联网级多模态推理直接接入机器人控制，ER↔VLA 双层栈支持跨 embodiment 技能迁移，On-Device 版媒体报道仅需约 50 条演示即可微调；局限是闭源、仅 API/合作访问，训练数据与内部评测细节不透明，外部难以复现 ["https://goo.gle/Gemini-2-robotics?trk=news_storyline_guest_reshare-text","https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/","https://arxiv.org/pdf/2510.03342","https://www.infoq.com/news/2025/07/google-gemini-robotics/"]。
+
+**RDT-1B（清华大学，2024-10-10）**：首个面向双臂操作的 diffusion 基础模型，用 Diffusion Transformer 作可扩展 backbone（约 1.2B 参数、28 层）；diffusion 生成连续双臂动作，把 DiT 引入机器人操作以处理多模态输入异构性，开源权重与代码；局限是双臂任务特定、diffusion 需多步去噪推理延迟高于自回归/flow 方法、真机验证规模有限 ["https://arxiv.org/pdf/2410.07864.pdf","https://dl.acm.org/doi/pdf/10.1145/3732945.3733004"]。
+</script>
+
+<script type="text/markdown" id="md-sec12">
+## 12. 未解决问题与未来方向
+
+跨章节汇总整条路线留下的未决问题：
+
+1. **离散 token 遗产与动作表征的残余权衡**：RT-1/RT-2/OpenVLA 三代离散 token 路线证明了"动作当语言"复用 VLM 的极简性，但精度、延迟、多模态建模三宗局限直到 π0 才被 flow matching 正面回应；而 flow matching 自身带来多步去噪延迟——高频全身/人形控制（WBC）下两种表征孰优仍无定论 ["https://arxiv.org/html/2511.18960v2","https://vnrobo.com/en/blog/lerobot-g1-pi0fast-whole-body"]。
+2. **跨 embodiment 泛化的真实上限**：OXE/RT-X 与 π0.7 的叠衣迁移证明了正迁移存在，但增益主要集中在同构桌面操作与双臂；四足导航、人形全身、多机器人协作（π 系列公开能力中未见 multi-robot coordination 的演示，【未公开/未查证】）仍未被证明 ["https://arxiv.org/abs/2310.08864","https://arxiv.org/html/2604.15483v1"]。
+3. **长时程泛化**：约 5 分钟、多阶段的"烤红薯"类任务不能纯 zero-shot，必须语言 coaching 或先微调高层政策；尚不能 LLM 式"零样本组合" ["https://arxiv.org/html/2604.15483v1"]。π0.7 自报未见任务成功率仅 60–80%，远低于分布内 >90%。
+4. **评估标准化缺失**：截至 π0.7 发布，PI 自报与自家前作/RL 专家对比，外部标准化 benchmark 缺位；"见过/没见过"因数据规模过大难以严格界定。AutoEval 与各类 2025–2026 新基准代表了重建可比评测的方向，但尚无公认的"机器人界 ImageNet" ["https://liveinthefuture.org/stories/physical-intelligence-pi07-robot-generalization-data-gap","https://arxiv.org/html/2503.24278v1/"]。
+5. **推理效率与部署**：π0.7 最小配置 38ms 但开 MEM + 子目标图最坏 127ms，world model 子目标生成需 4×H100、约 1.25 秒；端侧实时闭环与云端 world model 之间的工程折中仍在演进（对照 Gemini Robotics On-Device 端侧路线）["https://arxiv.org/html/2604.15483v1","https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/"]。
+6. **数据规模透明度与开源程度**：π0.7 总训练数据量【未公开/未查证】，π0 约 1 万小时/903M timestep 仅为【媒体/转述】级别；开源程度不一——OpenVLA、π0（openpi）开源权重，π0.5/π0.7 截至本调研未宣布开放权重，社区复现门槛仍高 ["https://www.pi.website/blog/openpi","https://www.pi.website/blog/pi07"]。
+</script>
+
+<script type="text/markdown" id="md-sec13">
+## 13. 参考来源汇总
+
+以下为正文引用过的 URL 去重集中清单（按首次出现分组；官方论文/项目页优先）：
+
+**Google 早期四作（R1）**
+- SayCan 论文：https://arxiv.org/abs/2204.01691 ；全文 v2：https://arxiv.org/html/2204.01691v2 ；项目页：https://say-can.github.io/
+- RT-1 论文：https://arxiv.org/abs/2212.06817 ；全文：https://ar5iv.labs.arxiv.org/html/2212.06817 ；项目页：https://robotics-transformer1.github.io/
+- PaLM-E 论文：https://arxiv.org/abs/2303.03378 ；全文：https://ar5iv.labs.arxiv.org/html/2303.03378 ；项目页：https://palm-e.github.io/
+- RT-2 论文：https://arxiv.org/abs/2307.15818 ；全文：https://ar5iv.labs.arxiv.org/html/2307.15818 ；项目页：https://robotics-transformer.github.io/ ；官方博客：https://deepmind.google/discover/blog/rt-2-new-model-translates-vision-and-language-into-action/
+
+**OXE / RT-X / Octo（R2）**
+- OXE 论文：https://arxiv.org/abs/2310.08864 ；PDF v3：https://arxiv.org/pdf/2310.08864v3 ；PDF v7：https://arxiv.org/pdf/2310.08864v7 ；PDF v6：https://arxiv.org/pdf/2310.08864v6
+- RT-X 项目页：https://robotics-transformer-x.github.io/ ；DeepMind 博客：https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types
+- SCARA 移植文：https://arxiv.org/pdf/2409.03299 ；综述数据表：https://arxiv.org/html/2402.07127v3 ；OXE-AugE：https://arxiv.org/html/2512.13100
+- Octo 论文：https://arxiv.org/abs/2405.12213 ；项目页：https://octo-models.github.io/ ；全文 v2：https://arxiv.org/html/2405.12213v2
+
+**OpenVLA / π 系列（R3）**
+- OpenVLA 论文：https://arxiv.org/abs/2406.09246 ；项目页：https://openvla.github.io/
+- RT-2 动作 token 对照：https://arxiv.org/pdf/2307.15818 ；AI Wiki：https://aiwiki.ai/wiki/rt_2
+- OpenVLA 动作 token 机制转述：https://arxiv.org/pdf/2504.19854v1.pdf ；https://arxiv.org/html/2504.19854 ；https://arxiv.org/html/2510.01642v1
+- π0 论文：https://arxiv.org/abs/2410.24164 ；全文 v2：https://arxiv.org/html/2410.24164v2/ ；PDF：https://arxiv.org/pdf/2410.24164.pdf?_sp=fe5e3699-dc47-4a51-b678-d7cef4b61754 ；PDF（R2 方法学）：https://isaacbs.com/papers/pi0.pdf
+- π0 媒体转述：https://aiwiki.ai/wiki/pi_zero ；https://aiwiki.ai/wiki/pi0/raw ；https://aiwiki.ai/wiki/physical_intelligence/raw ；https://www.cloderic.com/content/2025-02-27-notes-on-pi0 ；https://charonhub.deeplearning.ai/p0-a-machine-learning-system-for-household-robotics/ ；https://vnrobo.com/en/blog/lerobot-g1-pi0fast-whole-body
+- openpi 开源公告：https://www.pi.website/blog/openpi
+- π0.5 官方博客：https://www.pi.website/blog/pi05
+- π0.7 官方博客：https://www.pi.website/blog/pi07 ；论文：https://arxiv.org/html/2604.15483v1
+- π0.7 媒体：https://www.aiexpertmagazine.com/physical-intelligence-pi-0-7-model-composes-skills-fragmented-data/ ；https://www.humanoidsdaily.com/news/physical-intelligence-unveils-0-7-the-rise-of-compositional-generalization-in-robotics
+- π0.6 衔接：https://hokai.io/hub/companies/physical-intelligence ；离散局限转述：https://arxiv.org/html/2511.18960v2 ；https://arxiv.org/pdf/2512.22539v2
+
+**同期模型与基准（R4）**
+- GR00T N1：https://research.nvidia.com/publication/2025-03_nvidia-isaac-gr00t-n1-open-foundation-model-humanoid-robots ；https://arxiv.org/pdf/2503.14734v2 ；https://research.nvidia.com/labs/gear/gr00t-n1_5/?ref=vastkind.com
+- RoboMamba：https://ar5iv.labs.arxiv.org/html/2406.04339 ；https://www.semanticscholar.org/paper/RoboMamba%3A-Multimodal-State-Space-Model-for-Robot-Liu-Liu/f52c5f1ec94e8a2bf27247bcde7893572c7d53d1/figure/2
+- CrossFormer：https://crossformer-model.github.io/
+- Gemini Robotics：https://goo.gle/Gemini-2-robotics?trk=news_storyline_guest_reshare-text ；https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/ ；https://arxiv.org/pdf/2510.03342 ；https://www.infoq.com/news/2025/07/google-gemini-robotics/
+- RDT-1B：https://arxiv.org/pdf/2410.07864.pdf ；https://dl.acm.org/doi/pdf/10.1145/3732945.3733004
+- LIBERO：https://arxiv.org/pdf/2306.03310v2.pdf ；https://rpl.cs.utexas.edu/publications/2023/12/10/liu-neurips23-libero/ ；https://vnrobo.com/en/blog/vla-lerobot-13-pi0fast-training
+- OXE 评测：https://www.robot-learning.ml/2023/files/paper18.pdf
+- The Colosseum：https://arxiv.org/pdf/2402.08191?ref=https%3A%2F%2Fgithubhelp.com
+- SIMPLER：https://arxiv.org/html/2405.05941 ；https://simpler-env.github.io/
+- π0 评测转述：https://arxiv.org/html/2410.24164v4
+- AutoEval：https://arxiv.org/html/2503.24278v1/ ；新基准：https://arxiv.org/html/2605.20774 ；https://arxiv.org/html/2603.28545v2
+- π0.7 评测真空：https://awesomeagents.ai/news/physical-intelligence-pi07-generalist-robot/ ；https://liveinthefuture.org/stories/physical-intelligence-pi07-robot-generalization-data-gap
+</script>
+
+<script type="text/markdown" id="md-sec14">
+## 14. 方法与事实纪律说明
+
+1. **信源类型区分**：本报告事实分为两类——【官方/一手】（arXiv 论文摘要页与全文、ar5iv 全文、官方项目页、官方博客，如 pi.website/blog、deepmind.google）与【媒体/二手转述】（AI Wiki、cloderic.com、DeepLearning.AI 课程笔记、InfoQ、AI Expert Magazine、Humanoids Daily 等）。凡媒体转述的数字（如 π0 的约 9.03 亿 timesteps/约 1 万小时、π0.7 空气炸锅 5%→95%）均在正文显式标注【媒体/转述】或【媒体】，与官方数字分开对待。
+2. **【已查证】与【未查证】规则**：能从论文/官方材料直接核实的数字（参数量、数据量、成功率、发布日期）按论文正文采用；无法从一手信源核实的一律保留【未查证】【未逐一核对】【未公开/未查证】等标注，不做推测性补全。典型保留项：SayCan 实际部署技能子集数量、RT-1 结果表各列精确对应表头、RT-Bench 独立论文编号、RT-2-X 动作分箱数、π0.7 总训练数据量与是否开源权重、多机器人协作能力。
+3. **数字冲突处理**：笔记间口径不一致时并列呈现并注明各自来源，不自行取舍——典型如 OXE 机构数（摘要 21 institutions vs DeepMind 博客 33 academic labs vs 论文 v3 的 34 robotic research labs / 60 数据集 / 527 技能 / 160,266 任务）。
+4. **事实边界**：本报告只使用四份调研笔记（R1 Google 早期四作、R2 OXE/Octo、R3 OpenVLA→π 系列、R4 同期模型与基准）中的事实，未引入笔记之外的新事实、新数字或新结论；π0.6 仅作 π0.5→π0.7 的衔接提及，不展开。
+</script>
+<footer>
+  VLA 模型发展史深度调研 · 从 RT-1 到 π0.7 的技术路线图 · 事实以调研笔记 R1–R4 为唯一来源
+</footer>
+
+<script>
+/* ============ 内联图表数据（严格取自 vla_timeline_data.json） ============ */
+var TL = {
+  eras: [
+    {id:"e1",name:"问题奠基（2022）",start:"2022-04",end:"2022-12"},
+    {id:"e2",name:"VLM先验进入闭环（2023）",start:"2023-03",end:"2023-07"},
+    {id:"e3",name:"跨机构数据与开源（2023-2024）",start:"2023-10",end:"2024-02"},
+    {id:"e4",name:"开源VLA（2024）",start:"2024-06",end:"2024-10"},
+    {id:"e5",name:"π系列与生成式动作（2024-2025）",start:"2024-10",end:"2025-04"},
+    {id:"e6",name:"终点：π0.7（2026）",start:"2026-04",end:"2026-04"}
+  ],
+  nodes: [
+    {id:"saycan",name:"SayCan",org:"Google / Everyday Robots",date:"2022-04",era:"e1",side:false,
+     actionRepr:"不直接输出底层动作，从预训练技能集合（低层policy+value function+自然语言描述）中选一项",
+     headline:"LLM语义先验×技能affordance乘积打分的分层接地范式，VLA思想原点",
+     problemSolved:"LLM有语义知识但无具身经验，直接输出动作会不可执行；用p_LLM×p_affordance把语言先验约束在机器人可执行技能内。101条指令上执行成功率74%（mock厨房），去掉affordance仅靠LLM为0%。",
+     keyTech:"540B PaLM主干；551个候选技能（实际部署子集数量【未查证】）；68,000条遥操示范/10台机器人/11个月；误差归因65%来自LLM、35%来自affordance。",
+     leftover:"分层非端到端、两层误差累积；技能集合封闭学不会表外新动作；affordance对长程TAMP任务信息不足（oracle基线TAMP得分0.0）。",
+     citations:["https://arxiv.org/abs/2204.01691","https://arxiv.org/html/2204.01691v2","https://say-can.github.io/"]},
+    {id:"rt1",name:"RT-1",org:"Robotics at Google / Everyday Robots",date:"2022-12",era:"e1",side:false,
+     actionRepr:"首个动作离散token：7维臂部+3维底盘+1维模式切换，每维均匀分256 bins，类别交叉熵自回归",
+     headline:"35M端到端机器人Transformer，证明策略可像NLP一样随数据scaling",
+     problemSolved:"回答能否用单一端到端模型在大规模真机演示上训练、吞多任务数据并实时闭环控制。训练指令上97%成功率。",
+     keyTech:"FiLM-EfficientNet-B3+TokenLearner（81视觉token压成8个）+8层decoder-only Transformer，35M参数、3Hz闭环、推理<100ms；约13万真机演示/13台机器人/17个月/744条指令；无web图文预训练。",
+     leftover:"无web语义先验，对新奇物体/数字符号/抽象指令泛化差（未见场景约59-83%）；256-bin离散化精度损失、逐维自回归、难表达多模态动作；依赖大规模自采数据。",
+     citations:["https://arxiv.org/abs/2212.06817","https://ar5iv.labs.arxiv.org/html/2212.06817","https://robotics-transformer1.github.io/"]},
+    {id:"palm-e",name:"PaLM-E",org:"Google / Google DeepMind",date:"2023-03",era:"e2",side:false,
+     actionRepr:"输出自然语言高层子目标/子步骤（1Hz），低层复用RT-1式策略执行",
+     headline:"把图像/状态投影进大LLM词空间的embodied LLM（562B），证明互联网图文+机器人混训正迁移",
+     problemSolved:"让LLM自己直接吃进连续传感器模态（图像、状态向量）在同一模型里做具身推理，而非外挂affordance模块；TAMP上仅用1%数据（每任务320样本）即显著优于单机器人训练。",
+     keyTech:"ViT/OSRT投影进PaLM词嵌入空间端到端训练；最大562B=540B PaLM+22B ViT；覆盖TAMP（96,000场景）/Language-Table/厨房移动操作三域；OK-VQA无微调SOTA；移动操作直接沿用SayCan的2912条运行序列。",
+     leftover:"仍只输出高层语言子目标、不是端到端图像到动作VLA；562B部署昂贵；未解决自采数据贵与动作离散化精度问题。",
+     citations:["https://arxiv.org/abs/2303.03378","https://ar5iv.labs.arxiv.org/html/2303.03378","https://palm-e.github.io/"]},
+    {id:"rt2",name:"RT-2",org:"Google DeepMind",date:"2023-07",era:"e2",side:false,
+     actionRepr:"沿用RT-1的256 bins，动作拼成字符串token塞进VLM词表（symbol tuning），推理时detokenize回关节命令",
+     headline:"正式命名Vision-Language-Action（VLA）：动作当文本token复用web预训练VLM，泛化提升2-3倍",
+     problemSolved:"用web规模语义知识解决RT-1泛化痛点：6000次真机评估，泛化/推理新指令比RT-1好约2-3倍；消融from-scratch 9%→纯机器人微调52%→co-fine-tune 63%。",
+     keyTech:"直接复用PaLI-X（5B/55B）或PaLM-E-12B主干不新增参数；机器人数据与web VQA同批co-fine-tune（占mixture 50%/66%），WebLI约1B样本；CoT增强（Plan→Action）。",
+     leftover:"继承256-bin离散token的精度/延迟/多模态局限；12B-55B云模型实时性受限；机器人数据仍来自RT-1同一自采车队、缺跨本体多样性。",
+     citations:["https://arxiv.org/abs/2307.15818","https://ar5iv.labs.arxiv.org/html/2307.15818","https://deepmind.google/discover/blog/rt-2-new-model-translates-vision-and-language-into-action/","https://robotics-transformer.github.io/"]},
+    {id:"oxe_rtx",name:"Open X-Embodiment / RT-X",org:"跨机构联盟（Google DeepMind+33/34个实验室）",date:"2023-10",era:"e3",side:false,
+     actionRepr:"继承离散分桶（RT-1-X/RT-2-X）；OXE统一为夹爪坐标系7-DoF归一化动作（x,y,z,roll,pitch,yaw,gripper或速率）",
+     headline:"22种机器人、1M+轨迹的跨机构共享数据底座与开源checkpoint（RT-1-X/RT-2-X）",
+     problemSolved:"单机构数据不足、跨embodiment无法迁移、开源可复现性缺失。RT-1-X小数据域比各实验室自训方法平均高约50%；RT-2-X在emergent skills上成功率约为RT-2的3倍。",
+     keyTech:"60个已有数据集归一化为RLDS格式、1M+真实轨迹、527技能、160,266任务（机构数口径：摘要21 institutions vs 博客33 academic labs vs 论文v3的34 robotic research labs，并列保留）；RT-2-X约55B。",
+     leftover:"正迁移主要集中在同构桌面操作与小数据域，四足/移动操作等大形态差距泛化未证明；离散动作token分辨率瓶颈；60个异构数据集标注稀疏、mixture配比仍是未解scaling问题。",
+     citations:["https://arxiv.org/abs/2310.08864","https://arxiv.org/pdf/2310.08864v3","https://robotics-transformer-x.github.io/","https://www.deepmind.com/blog/scaling-up-learning-across-many-different-robot-types"]},
+    {id:"octo",name:"Octo",org:"UC Berkeley / Stanford / CMU / Google DeepMind",date:"2024-05",era:"e3",side:false,
+     actionRepr:"条件扩散解码头（3层MLP、20步去噪）预测连续多模态动作分布；末端delta相对动作+action chunking",
+     headline:"全开源（代码+权重+数据）通用策略基线，消费级GPU数小时可微调",
+     problemSolved:"此前通用策略要么闭源（RT-2-X 55B）要么难适配新传感器/动作空间。零样本WidowX/UR5/RT-1 Robot成功率0.50/0.70/0.80，与55B RT-2-X相当。",
+     keyTech:"冻结t5-base+浅层CNN patch编码器（16x16 patch）+block-wise掩码注意力；10M/27M/93M三档；从OXE选25个数据集约80万轨迹；TPU v4-128训14小时、单张A5000微调约5小时。",
+     leftover:"腕相机信息处理不佳；仅93M、语言编码器冻结、无互联网VLM预训练、开放词汇语义弱于大VLA；预训练仅OXE子集、评测集中桌面操作。",
+     citations:["https://arxiv.org/abs/2405.12213","https://octo-models.github.io/","https://arxiv.org/html/2405.12213v2"]},
+    {id:"openvla",name:"OpenVLA",org:"Stanford / UC Berkeley 等",date:"2024-06",era:"e4",side:false,
+     actionRepr:"沿用离散token：动作逐维quantile分箱映射到LLaMA最不常用的256个token，next-token自回归",
+     headline:"开源7B VLA（Llama 2+DINOv2/SigLIP），OXE 970k轨迹训练，以1/7参数反超55B RT-2-X",
+     problemSolved:"此前VLA闭源不可微调、学术团队拿不到55B权重。29个任务上以7B绝对成功率反超RT-2-X 16.5%、比从零训练Diffusion Policy高20.4%。",
+     keyTech:"Prismatic-7B主干（Llama 2+融合DINOv2与SigLIP的视觉编码器）；970k真实轨迹纯开源数据；LoRA消费级GPU微调、量化部署不掉点；真机评测为RT-Bench体系（Google Robot 12任务/Bridge 17任务五维泛化）。",
+     leftover:"原封不动继承离散token的高频精度/延迟/多模态局限（后由OpenVLA-OFT改回归头、π0改flow matching）；评测仍偏训练相近场景、开放世界泛化弱。",
+     citations:["https://arxiv.org/abs/2406.09246","https://openvla.github.io/","https://arxiv.org/html/2510.01642v1","https://arxiv.org/html/2406.09246"]},
+    {id:"robomamba",name:"RoboMamba",org:"北京大学等",date:"2024-06",era:"e4",side:true,
+     actionRepr:"连续SE(3)末端位姿回归（6-DoF+夹爪1维），冻结主干上接小型MLP head直接回归，非离散token、非diffusion/flow",
+     headline:"用Mamba状态空间模型替代Transformer的高效VLA",
+     problemSolved:"3.2B参数仅微调0.1%（3.7M policy head）、数十分钟获得操作能力；自称推理速度比同期VLA快约3倍。",
+     keyTech:"SSM backbone；逐步SE(3)回归；SAPIEN仿真与Franka单臂验证。",
+     leftover:"未采用action chunking等生成式动作建模；主要在仿真与单臂验证，泛化证据有限。",
+     citations:["https://ar5iv.labs.arxiv.org/html/2406.04339","https://www.semanticscholar.org/paper/RoboMamba%3A-Multimodal-State-Space-Model-for-Robot-Liu-Liu/f52c5f1ec94e8a2bf27247bcde7893572c7d53d1/figure/2"]},
+    {id:"crossformer",name:"CrossFormer",org:"UC Berkeley + CMU",date:"2024-08",era:"e4",side:true,
+     actionRepr:"连续动作；decoder-only transformer共享backbone，末端按embodiment类别接独立action heads（双臂50Hz、四足12-DoF）",
+     headline:"单一transformer策略跨30种embodiment做操作/导航/locomotion/航空（CoRL 2024 Oral）",
+     problemSolved:"首次证明跨具身策略可同时控制单臂、双臂、轮式导航、四足低层运动；900K轨迹、30种机器人训练，复杂导航/操作平均成功率比此前跨具身工作高约3倍。",
+     keyTech:"arXiv:2408.11812（实际标题Scaling Cross-Embodied Learning...；调研中曾见的'Versatile VLA with Arbitrary Modality Combination'标题未查证到对应论文）。",
+     leftover:"语言条件较弱、更接近跨具身模仿学习而非完整VLA；动作头按embodiment类别分开、未真正统一动作空间。",
+     citations:["https://crossformer-model.github.io/"]},
+    {id:"pi0",name:"π0",org:"Physical Intelligence",date:"2024-10",era:"e5",side:false,
+     actionRepr:"conditional flow matching连续动作块H=50步（约1秒@50Hz），约10步去噪解码；VLM离散token走cross-entropy",
+     headline:"VLA flow model：PaliGemma 3B+300M action expert（共约3.3B），开创π系列架构母版",
+     problemSolved:"正面解决离散token在高频/双手/多模态动作上的精度瓶颈：预训练zero-shot执行叠衣服、擦桌子、装箱；单臂/双臂/移动操作统一在一个模型。",
+     keyTech:"双专家单Transformer（Transfusion式多目标）；私有自采约9.03亿timesteps（约1万小时）/68任务/7种机器人配置【媒体/转述】，叠加OXE/Bridge v2/DROID【媒体】；2025-02-04以openpi（Apache 2.0）开源权重，同时发π0-FAST。",
+     leftover:"评测仍在与训练相近环境、开放世界泛化不足；flow多步去噪延迟（第三方实测约300-600ms、1.5-3Hz【媒体】）；长时程任务与显式高层规划未出现。",
+     citations:["https://arxiv.org/abs/2410.24164","https://arxiv.org/html/2410.24164v2/","https://www.pi.website/blog/openpi","https://aiwiki.ai/wiki/pi_zero"]},
+    {id:"rdt1b",name:"RDT-1B",org:"清华大学",date:"2024-10",era:"e5",side:true,
+     actionRepr:"diffusion生成连续双臂动作；DiT backbone（约1.2B参数、28层）",
+     headline:"首个面向双臂操作的diffusion基础模型，用Diffusion Transformer作可扩展backbone",
+     problemSolved:"把DiT引入机器人操作以处理多模态输入异构性；专注双臂；开源权重与代码。",
+     keyTech:"arXiv:2410.07864；双臂diffusion策略。",
+     leftover:"双臂任务特定；diffusion多步去噪推理延迟高于自回归/flow方法；真机验证规模有限。",
+     citations:["https://arxiv.org/pdf/2410.07864.pdf","https://dl.acm.org/doi/pdf/10.1145/3732945.3733004"]},
+    {id:"pi05",name:"π0.5",org:"Physical Intelligence",date:"2025-04",era:"e5",side:false,
+     actionRepr:"双路径并存：离散自回归出高层语言子任务+flow matching出底层50步连续动作块（action expert约300M）",
+     headline:"高低层双层VLA，异构数据co-training解决开放世界泛化（OOD成功率94%）",
+     problemSolved:"把移动操作机器人放进训练数据完全没见过的家庭做收拾厨房/卧室、铺床等长时程任务。完整模型OOD follow/success 94%/94%；去WD降至80%/74%，去ME降至33%/31%。",
+     keyTech:"WD（互联网多模态）+ME（异家庭）+CE（跨embodiment）三源co-training+高层子任务标注+口头指导演示；约100个训练环境后逼近'直接在测试环境训练'上界。",
+     leftover:"新技能仍需微调、长时程任务常失败；大embodiment gap上显著退化；未系统利用失败/次优数据、无显式视觉子目标（留给π0.7）。",
+     citations:["https://www.pi.website/blog/pi05"]},
+    {id:"gr00tn1",name:"GR00T N1",org:"NVIDIA",date:"2025-03",era:"e5",side:true,
+     actionRepr:"连续动作由diffusion transformer（DiT）动作头实时生成，与System 2 VLM模块端到端联合训练",
+     headline:"面向人形机器人的开放VLA基础模型，双系统架构（System 2推理+System 1高频控制）",
+     problemSolved:"号称世界首个开放的通用人形机器人基础模型（GTC 2025发布）；训练数据含第一视角人类视频、真机/仿真轨迹与合成数据。",
+     keyTech:"双系统架构；人形本体（Fourier GR-1、1X等）。",
+     leftover:"真机家庭任务覆盖面有限；首版仍在快速演进（很快推出N1.5/N1.6）。",
+     citations:["https://research.nvidia.com/publication/2025-03_nvidia-isaac-gr00t-n1-open-foundation-model-humanoid-robots","https://arxiv.org/pdf/2503.14734v2"]},
+    {id:"gemini_robotics",name:"Gemini Robotics",org:"Google DeepMind",date:"2025-03",era:"e5",side:true,
+     actionRepr:"连续motor commands（具体动作头结构未公开）；1.5版动作前显式输出推理过程",
+     headline:"基于Gemini 2.0、把动作作为新输出模态的旗舰闭源VLA，配套ER具身推理模块",
+     problemSolved:"把Gemini 2.0互联网级多模态推理直接接入机器人控制；ER↔VLA双层栈支持跨embodiment技能迁移；On-Device端侧版媒体报道约50条演示即可微调。2025-03-12首发、2025-06-24端侧版、2025-09-25 1.5版。",
+     keyTech:"Gemini 2.0主干+Embodied Reasoning模块。",
+     leftover:"闭源、仅API/合作访问；训练数据与内部评测不透明、外部难以复现。",
+     citations:["https://goo.gle/Gemini-2-robotics?trk=news_storyline_guest_reshare-text","https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/","https://arxiv.org/pdf/2510.03342"]},
+    {id:"pi07",name:"π0.7",org:"Physical Intelligence",date:"2026-04",era:"e6",side:false,
+     actionRepr:"860M flow matching action expert、固定50个action token=50步chunk、token间双向注意力；adaptive RMSNorm注入flow时间步；训练时RTC",
+     headline:"steerable通用基座（约5B）：Gemma3 4B主干+MEM历史编码器+world model子目标引导，组合泛化早期迹象",
+     problemSolved:"把泛化从'新环境已知任务'推进到'训练里没见过的新任务组合'：叠T恤zero-shot迁到零该数据的双臂UR5e达专家人类水平；4个未见厨房+2个未见卧室执行3-6步指令；抗Reverse数据偏置；开箱追平/超过π*0.6 RL专家。",
+     keyTech:"总参数约5B（Gemma3 4B含400M视觉编码器+MEM历史编码器+860M flow expert）；world model初始化自BAGEL 14B衍生、每Δ=4秒生成子目标图；知识绝缘训练（梯度不回传主干）；多模态prompt conditioning；重度使用失败次优数据与π*0.6 RL专家蒸馏；第一人称人类视频；单张H100最小38ms、开MEM+子目标最坏127ms。",
+     leftover:"未见任务成功率仅60-80%（分布内>90%）；约5分钟长时程任务不能纯zero-shot、需语言coaching；'见过/没见过'难以严格界定；总训练数据量【未公开/未查证】；是否开放权重与标准benchmark数字表【未公开/未查证】；多机器人协作未见公开演示。",
+     citations:["https://www.pi.website/blog/pi07","https://arxiv.org/html/2604.15483v1"]}
+  ],
+  chain: [
+    {from:"SayCan",leftover:"分层非端到端、两层误差累积（65%错误来自LLM规划层）；技能集封闭；affordance对长程TAMP信息不足（oracle基线0.0）",to:"PaLM-E",solution:"把传感器直接投影进大LLM词空间做具身推理，移动操作域直接沿用SayCan设置与2912条运行序列，把接地从外置value function升级为模型内建，解决分层误差累积与封闭技能集问题"},
+    {from:"RT-1",leftover:"无web语义先验，对新奇物体/数字符号/抽象指令泛化差",to:"RT-2",solution:"直接复用web预训练VLM主干（PaLI-X/PaLM-E-12B）不新增参数，沿用其256-bin动作分桶，用机器人数据与web VQA co-fine-tune（消融from-scratch 9%→co-FT 63%）补上泛化"},
+    {from:"RT-2",leftover:"55B级闭源、学术团队拿不到权重，动作token与VLM语义对齐粗糙",to:"OpenVLA",solution:"用开源7B Prismatic主干（Llama 2+DINOv2/SigLIP）+OXE 970k开源轨迹+LLaMA词表256动作token，LoRA可微调，以1/7参数反超RT-2-X 16.5%，把VLA拉进社区可复现区间"},
+    {from:"RT-2",leftover:"256-bin离散token精度有限、逐维自回归慢、难表达多模态连续动作分布",to:"π0",solution:"改用conditional flow matching学向量场，一次输出H=50步连续action chunk、约10步去噪，独立300M action expert与VLM主干Transfusion式多目标共训，直接建模高频多模态灵巧动作分布"},
+    {from:"Open X-Embodiment / RT-X",leftover:"跨embodiment共训练的正迁移已被证明（RT-1-X+50%、RT-2-X 3倍），但只在同构桌面操作上显著、跨本体方法学未延续到更大模型",to:"π0",solution:"继承cross-embodiment training方法学，把单臂/双臂/移动操作统一进同一3.3B模型，叠加私有多机器人自采数据（约1万小时【媒体】）与公开OXE/Bridge/DROID，把OXE的数据底座升级为生成式动作模型的训练原料"},
+    {from:"π0",leftover:"评测仍在与训练相近的环境，全新家庭/杂乱场景开放世界泛化不足",to:"π0.5",solution:"新增离散自回归路径输出高层语言子任务形成高低层双层；用WD（互联网多模态）+ME（异家庭）+CE（跨embodiment）异构co-training，把OOD follow/success推到94%"},
+    {from:"π0.5",leftover:"新技能仍需微调、长时程任务常失败；大embodiment gap上退化；未系统利用失败/次优数据、无显式视觉子目标",to:"π0.7",solution:"主干升级Gemma3 4B、action expert放大到860M，新增MEM历史编码器与world model生成子目标图的分层引导；重度纳入失败/次优自主数据+π*0.6 RL专家蒸馏+第一人称人类视频，用episode元数据消歧，实现组合泛化与开箱专家级灵巧"}
+  ]
+};
+</script>
+<script>
+/* ============ Markdown 渲染器（针对本报告语法子集） ============ */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderCites(text){
+  // 把 ["url1","url2"] 转成可点击链接，URL 原文保留
+  return text.replace(/\[("(?:[^"\\]|\\.)*"(?:\s*,\s*"(?:[^"\\]|\\.)*")*)\]/g, function(m, inner){
+    var urls = inner.split(',').map(function(u){return u.trim().replace(/^"|"$/g,'');});
+    return urls.map(function(u){
+      return '<a class="cite" href="'+esc(u)+'" target="_blank" rel="noopener">["'+esc(u)+'"]</a>';
+    }).join(' ');
+  });
+}
+function renderInline(text){
+  var t = esc(text);
+  t = renderCites(t);
+  t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  return t;
+}
+function mdToHtml(md){
+  var lines = md.split('\n');
+  var out = [];
+  var i=0, inList=false, listType='';
+  function closeList(){ if(inList){ out.push(listType==='ol'?'</ol>':'</ul>'); inList=false; } }
+  while(i<lines.length){
+    var line = lines[i].trim();
+    if(!line){ closeList(); i++; continue; }
+    if(/^### /.test(line)){ closeList(); out.push('<h4>'+renderInline(line.slice(4))+'</h4>'); i++; continue; }
+    if(/^## /.test(line)){ closeList(); out.push('<h2 class="chap-title">'+renderInline(line.slice(3))+'</h2>'); i++; continue; }
+    if(/^# /.test(line)){ closeList(); out.push('<h2 class="chap-title">'+renderInline(line.slice(2))+'</h2>'); i++; continue; }
+    if(/^> /.test(line)){
+      closeList();
+      var q=[line.slice(2)];
+      while(i+1<lines.length && /^> /.test(lines[i+1].trim())){ q.push(lines[i+1].trim().slice(2)); i++; }
+      out.push('<blockquote>'+renderInline(q.join(' '))+'</blockquote>'); i++; continue;
+    }
+    if(/^\|/.test(line)){
+      closeList();
+      var rows=[];
+      while(i<lines.length && /^\|/.test(lines[i].trim())){ rows.push(lines[i].trim()); i++; }
+      // 去掉分隔行
+      var parsed = rows.filter(function(r){return !/^\|[\s:|-]+\|$/.test(r);});
+      var cells = parsed.map(function(r){
+        return r.replace(/^\|/,'').replace(/\|$/,'').split('|').map(function(c){return c.trim();});
+      });
+      if(cells.length){
+        var ncol = cells[0].length;
+        var colw = Math.floor(100/ncol);
+        var cg='<colgroup>';
+        for(var c=0;c<ncol;c++){ cg+='<col style="width:'+(c===ncol-1?(100-colw*(ncol-1)):colw)+'%">'; }
+        cg+='</colgroup>';
+        var html='<div class="tbl-wrap"><table style="min-width:'+(ncol*110)+'px">'+cg+'<thead><tr>';
+        cells[0].forEach(function(h){ html+='<th>'+renderInline(h)+'</th>'; });
+        html+='</tr></thead><tbody>';
+        for(var r=1;r<cells.length;r++){
+          html+='<tr>';
+          cells[r].forEach(function(cc){ html+='<td>'+renderInline(cc)+'</td>'; });
+          html+='</tr>';
+        }
+        html+='</tbody></table></div>';
+        out.push(html);
+      }
+      continue;
+    }
+    if(/^[-*] /.test(line)){
+      if(!inList || listType!=='ul'){ closeList(); out.push('<ul>'); inList=true; listType='ul'; }
+      out.push('<li>'+renderInline(line.slice(2))+'</li>'); i++; continue;
+    }
+    if(/^\d+\. /.test(line)){
+      if(!inList || listType!=='ol'){ closeList(); out.push('<ol>'); inList=true; listType='ol'; }
+      out.push('<li>'+renderInline(line.replace(/^\d+\. /,''))+'</li>'); i++; continue;
+    }
+    closeList();
+    out.push('<p>'+renderInline(line)+'</p>'); i++;
+  }
+  closeList();
+  return out.join('\n');
+}
+
+// 把各 md 块注入对应 section
+['sec1','sec2','sec3','sec4','sec5','sec6','sec7','sec8','sec9','sec10','sec11','sec12','sec13','sec14'].forEach(function(id){
+  var src = document.getElementById('md-'+id);
+  if(!src) return;
+  var sec = document.createElement('section');
+  sec.className='chapter'; sec.id=id;
+  sec.innerHTML = mdToHtml(src.textContent);
+  document.querySelector('main.wrap').appendChild(sec);
+});
+
+/* ============ ECharts：交互式时间线 ============ */
+var tlChart = echarts.init(document.getElementById('timelineChart'));
+function d(s){ return new Date(s+'-01').getTime(); }
+var mainNodes = TL.nodes.filter(function(n){return !n.side;});
+var sideNodes = TL.nodes.filter(function(n){return n.side;});
+
+// era markArea
+var markAreas = TL.eras.map(function(e,idx){
+  return [{xAxis:d(e.start), itemStyle:{color: idx%2===0?'rgba(14,107,114,0.06)':'rgba(201,124,10,0.05)'},
+           label:{show:true,position:'insideTop',formatter:e.name,fontSize:10,color:'#5b6b70'}},
+          {xAxis:d(e.end)}];
+});
+
+function nodeSeries(nodes, isSide){
+  return {
+    type:'scatter',
+    symbolSize: isSide?10:16,
+    itemStyle:{ color: isSide?'transparent':'#0e6b72',
+                borderColor: isSide?'#8aa0a5':'#0e6b72',
+                borderWidth: isSide?2:1,
+                shadowBlur: isSide?0:6, shadowColor:'rgba(14,107,114,.4)' },
+    data: nodes.map(function(n){
+      return { value:[d(n.date),0], name:n.name, id:n.id,
+               label:{show:true, position: isSide?'bottom':'top',
+                      formatter:n.name+'\n'+n.date, fontSize:10, color: isSide?'#5b6b70':'#0d3f44', lineHeight:13} };
+    }),
+    markArea: isSide?undefined:{silent:true, data:markAreas},
+    markLine: isSide?undefined:{silent:true, symbol:'none',
+      data:[{yAxis:0, lineStyle:{color:'#0d3f44',width:2}, label:{show:false}}]}
+  };
+}
+tlChart.setOption({
+  grid:{left:50,right:30,top:50,bottom:40},
+  xAxis:{type:'time', min:d('2022-02'), max:d('2026-08'),
+         axisLine:{lineStyle:{color:'#999'}}, axisLabel:{color:'#5b6b70',fontSize:11}},
+  yAxis:{type:'value', min:-1.5, max:1.5, show:false},
+  tooltip:{trigger:'item', confine:true, formatter:function(p){return p.data.name+'<br/>点击查看详情';}},
+  series:[nodeSeries(mainNodes,false), nodeSeries(sideNodes,true)]
+});
+tlChart.on('click', function(p){
+  if(p.data && p.data.id){ showNodeDetail(p.data.id); }
+});
+function showNodeDetail(id){
+  var n = TL.nodes.find(function(x){return x.id===id;});
+  if(!n) return;
+  var cites = n.citations.map(function(c){
+    return '<a class="cite" href="'+c+'" target="_blank" rel="noopener">["'+c+'"]</a>';
+  }).join(' ');
+  document.getElementById('tlDetail').innerHTML =
+    '<div class="dp-head"><span class="dp-name">'+n.name+'</span>'+
+    '<span class="dp-date">'+n.date+'</span><span class="dp-org">'+n.org+(n.side?'（同期模型）':'')+'</span></div>'+
+    '<div class="dp-row"><span class="dp-label">定位</span>'+n.headline+'</div>'+
+    '<div class="dp-row"><span class="dp-label">动作表征</span>'+n.actionRepr+'</div>'+
+    '<div class="dp-row"><span class="dp-label">解决了什么</span>'+n.problemSolved+'</div>'+
+    '<div class="dp-row"><span class="dp-label">关键技术</span>'+n.keyTech+'</div>'+
+    '<div class="dp-row"><span class="dp-label alt">遗留问题</span>'+n.leftover+'</div>'+
+    '<div class="dp-row"><span class="dp-label">引用</span>'+cites+'</div>';
+}
+
+/* ============ ECharts：问题解决链条图 ============ */
+var chainChart = echarts.init(document.getElementById('chainChart'));
+// 手工布局：左→右时间流
+var pos = {
+  'SayCan':[80,110], 'RT-1':[80,390],
+  'PaLM-E':[340,110], 'RT-2':[600,250], 'Open X-Embodiment / RT-X':[600,430],
+  'OpenVLA':[880,350], 'π0':[1130,250],
+  'π0.5':[1380,250], 'π0.7':[1620,250]
+};
+var chainNodes = Object.keys(pos).map(function(k){
+  var isEnd = (k==='π0.7');
+  return { name:k, x:pos[k][0], y:pos[k][1],
+    symbolSize: k==='π0.7'?60:46,
+    itemStyle:{ color: isEnd?'#c97c0a':'#0e6b72', borderColor:'#0d3f44', borderWidth:2 },
+    label:{show:true,position:'inside',color:'#fff',fontSize:11,fontWeight:600}
+  };
+});
+var chainLinks = TL.chain.map(function(c,idx){
+  return { source:c.from, target:c.to,
+    lineStyle:{color:'#8aa0a5',width:2,curveness:0.1},
+    edgeId:idx };
+});
+chainChart.setOption({
+  tooltip:{confine:true, formatter:function(p){
+    if(p.dataType==='edge'){ var c=TL.chain[p.data.edgeId]; return c.from+' → '+c.to+'<br/>点击查看遗留问题与解决方案'; }
+    return p.name;
+  }},
+  series:[{
+    type:'graph', layout:'none', roam:true, draggable:false,
+    edgeSymbol:['none','arrow'], edgeSymbolSize:8,
+    data:chainNodes, links:chainLinks,
+    emphasis:{lineStyle:{width:3,color:'#c97c0a'}, label:{fontWeight:700}}
+  }]
+});
+chainChart.on('click', function(p){
+  if(p.dataType==='edge'){
+    var c = TL.chain[p.data.edgeId];
+    document.getElementById('chainDetail').innerHTML =
+      '<div class="dp-head"><span class="dp-name">'+c.from+'</span>'+
+      '<span class="dp-date">→</span>'+
+      '<span class="dp-name" style="color:#c97c0a">'+c.to+'</span></div>'+
+      '<div class="dp-row"><span class="dp-label alt">上一代遗留问题</span>'+c.leftover+'</div>'+
+      '<div class="dp-row"><span class="dp-label">下一代解决方案</span>'+c.solution+'</div>';
+  }
+});
+
+/* ============ 响应式 ============ */
+window.addEventListener('resize', function(){
+  tlChart.resize(); chainChart.resize();
+});
+</script>
+</body>
+</body>
+</html>

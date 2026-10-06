@@ -1,0 +1,8 @@
+{
+  "episodes": 500,
+  "transitions": 172234,
+  "successes": 481,
+  "timeouts": 19,
+  "mean_steps": 344.468,
+  "max_steps": 750
+}
